@@ -11,6 +11,12 @@ export default {
     GREEN_700: "#002d00",
     GREEN_800_CUSTOM: "#488A35",
 
+    GREEN_LOGO: "#4b8c34",
+    BROWN_LOGO: "#54341c",
+
+    GREEN_LOGO2: "#4c9028",
+    BRONW_LOGO: "#4c4c28",
+
     BROWN_100: "#7e4a44",
     BROWN_200: "#703e39",
     BROWN_300: "#63322d",

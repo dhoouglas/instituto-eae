@@ -1,3 +1,4 @@
+import { Loading } from "@/components/Loading";
 import "./src/theme/global.css";
 
 import {
@@ -5,20 +6,21 @@ import {
   Inter_700Bold,
   useFonts,
 } from "@expo-google-fonts/inter";
-import { StatusBar, Text, View } from "react-native";
+import { StatusBar, View } from "react-native";
+import { Routes } from "@/routes";
 
 export default function App() {
   const [isFontsLoaded] = useFonts({ Inter_400Regular, Inter_700Bold });
 
   return (
-    <View className="flex-1 items-center justify-center">
+    <>
       <StatusBar
         barStyle="dark-content"
         backgroundColor="transparent"
         translucent
       />
 
-      {isFontsLoaded ? <Text>Hello EAE !</Text> : null}
-    </View>
+      {isFontsLoaded ? <Routes /> : <Loading />}
+    </>
   );
 }
