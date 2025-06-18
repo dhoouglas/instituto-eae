@@ -32,10 +32,12 @@ export default {
     GRAY_600: "#333638",
     GRAY_700: "#1B1D1E",
   },
+
   FONT_FAMILY: {
     REGULAR: "Inter_400Regular",
     BOLD: "Inter_700Bold",
   },
+
   FONT_SIZE: {
     XS: 12,
     SM: 14,

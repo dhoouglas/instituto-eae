@@ -1,4 +1,7 @@
-import { createStackNavigator } from "@react-navigation/stack";
+import {
+  createStackNavigator,
+  StackScreenProps,
+} from "@react-navigation/stack";
 
 import { Home } from "../screens/Home";
 import { Welcome } from "@/screens/Welcome";
@@ -12,7 +15,10 @@ export type StackRouteList = {
   home: undefined;
 };
 
-export type StackRoutesProps<T extends keyof StackRouteList> = StackRouteList;
+export type AppScreenProps<T extends keyof StackRouteList> = StackScreenProps<
+  StackRouteList,
+  T
+>;
 
 const Stack = createStackNavigator<StackRouteList>();
 
