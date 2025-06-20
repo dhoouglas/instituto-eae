@@ -12,7 +12,7 @@ import { AppScreenProps } from "@/routes/app.routes";
 
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
-import SocialAuthButtons from "@/components/SocialAuthButtons.tsx";
+import SocialAuthButtons from "@/components/SocialAuthButtons";
 
 export function Login({ navigation }: AppScreenProps<"login">) {
   const [email, setEmail] = useState("");
