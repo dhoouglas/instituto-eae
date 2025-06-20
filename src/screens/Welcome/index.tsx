@@ -47,6 +47,7 @@ export function Welcome({ navigation }: AppScreenProps<"welcome">) {
               onPress={() => navigation.navigate("login")}
               className="bg-green-logo py-5 rounded-xl items-center justify-center"
               textClassName="text-white font-bold text-lg font-[Inter_700Bold]"
+              hasShadow={true}
             />
             <Button
               title="Cadastrar"

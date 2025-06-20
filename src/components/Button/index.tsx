@@ -4,35 +4,50 @@ import {
   TouchableOpacityProps,
   Text,
   ActivityIndicator,
+  Platform,
+  View,
 } from "react-native";
 
-// As props foram simplificadas. Removemos 'variant' e adicionamos 'textClassName'.
 type ButtonProps = TouchableOpacityProps & {
   title: string;
   isLoading?: boolean;
-  textClassName?: string; // Nova prop para estilizar o <Text>
+  textClassName?: string;
+  hasShadow?: boolean;
+  shadowColor?: string;
 };
 
 export function Button({
   title,
   isLoading = false,
-  className, // Para o container TouchableOpacity
-  textClassName, // Para o componente Text
-  ...rest // Demais props como onPress, etc.
+  className,
+  textClassName,
+  hasShadow = false,
+  shadowColor = "#4b8c34",
+  ...rest
 }: ButtonProps) {
+  const shadowStyle = hasShadow
+    ? Platform.select({
+        ios: {
+          shadowColor: shadowColor,
+          shadowOffset: { width: 0, height: 6 },
+          shadowOpacity: 0.35,
+          shadowRadius: 14,
+        },
+        android: {
+          elevation: 8,
+        },
+      })
+    : {};
+
   return (
-    <TouchableOpacity
-      className={className} // O estilo do container vem 100% de fora
-      disabled={isLoading}
-      activeOpacity={0.8}
-      {...rest}
-    >
-      {isLoading ? (
-        // O ActivityIndicator usará a cor padrão ou pode ser estilizado no futuro
-        <ActivityIndicator />
-      ) : (
-        <Text className={textClassName}>{title}</Text> // O estilo do texto vem 100% de fora
-      )}
+    <TouchableOpacity disabled={isLoading} activeOpacity={0.8} {...rest}>
+      <View style={shadowStyle} className={className}>
+        {isLoading ? (
+          <ActivityIndicator />
+        ) : (
+          <Text className={textClassName}>{title}</Text>
+        )}
+      </View>
     </TouchableOpacity>
   );
 }
