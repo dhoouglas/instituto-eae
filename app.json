@@ -2,6 +2,7 @@
   "expo": {
     "name": "Instituto-EAE",
     "slug": "Instituto-EAE",
+    "scheme": "instituto-eae",
     "owner": "dhoouglas",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -42,7 +43,8 @@
       }
     },
     "plugins": [
-      "expo-font"
+      "expo-font",
+      "expo-web-browser"
     ]
   }
 }

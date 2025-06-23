@@ -18,23 +18,22 @@ import SocialAuthButtons from "@/components/SocialAuthButtons";
 import { useSignIn } from "@clerk/clerk-expo";
 import { handleClerkError } from "@/utils/errors/clerkErrorHandler";
 
+import { useSocialAuth } from "@/hooks/useSocialAuth";
+
 export function Login({ navigation }: AppScreenProps<"login">) {
   const { signIn, setActive, isLoaded } = useSignIn();
+  const { handleSocialPress } = useSocialAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const [focusedInput, setFocusedInput] = useState<"email" | "password" | null>(
     null
   );
 
-  const [isLoading, setIsLoading] = useState(false);
-
   const onSignInPress = async () => {
-    if (!isLoaded) {
-      return;
-    }
+    if (!isLoaded) return;
     setIsLoading(true);
-
     try {
       const completeSignIn = await signIn.create({
         identifier: email,
@@ -44,8 +43,6 @@ export function Login({ navigation }: AppScreenProps<"login">) {
     } catch (err: any) {
       const errorMessage = handleClerkError(err);
       Alert.alert("Erro no Login", errorMessage);
-
-      // console.error("ERRO COMPLETO DO CLERK:", JSON.stringify(err, null, 2));
     } finally {
       setIsLoading(false);
     }
@@ -89,13 +86,11 @@ export function Login({ navigation }: AppScreenProps<"login">) {
               value={password}
               onChangeText={setPassword}
             />
-
             <TouchableOpacity className="self-end my-5">
-              <Text className="text-green-logo font-semibold font-regular]">
+              <Text className="text-green-logo font-semibold font-regular">
                 Esqueceu sua senha?
               </Text>
             </TouchableOpacity>
-
             <Button
               title="Entrar"
               onPress={onSignInPress}
@@ -105,17 +100,16 @@ export function Login({ navigation }: AppScreenProps<"login">) {
               hasShadow={true}
               shadowColor="#2A9D8F"
             />
-
             <TouchableOpacity
               className="mt-6"
               onPress={() => navigation.navigate("register")}
             >
-              <Text className="text-black text-center font-semibold font-regular">
+              <Text className="text-black text-center font-semibold font-font-regular">
                 Criar uma nova conta
               </Text>
             </TouchableOpacity>
 
-            <SocialAuthButtons />
+            <SocialAuthButtons onPress={handleSocialPress} />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

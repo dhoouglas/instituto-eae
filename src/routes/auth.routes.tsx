@@ -1,3 +1,6 @@
+import { useEffect } from "react"; // Importe o React
+import * as WebBrowser from "expo-web-browser";
+
 import { createStackNavigator } from "@react-navigation/stack";
 
 import { Welcome } from "@/screens/Welcome";
@@ -6,9 +9,22 @@ import { Register } from "@/screens/Register";
 
 import { StackRouteList } from "./app.routes";
 
+WebBrowser.maybeCompleteAuthSession();
+
+const useWarmUpBrowser = () => {
+  useEffect(() => {
+    void WebBrowser.warmUpAsync();
+    return () => {
+      void WebBrowser.coolDownAsync();
+    };
+  }, []);
+};
+
 const Stack = createStackNavigator<StackRouteList>();
 
 export function AuthRoutes() {
+  useWarmUpBrowser();
+
   return (
     <Stack.Navigator
       screenOptions={{ headerShown: false }}

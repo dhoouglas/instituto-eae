@@ -18,8 +18,11 @@ import SocialAuthButtons from "@/components/SocialAuthButtons";
 import { useSignUp } from "@clerk/clerk-expo";
 import { handleClerkError } from "@/utils/errors/clerkErrorHandler";
 
+import { useSocialAuth } from "@/hooks/useSocialAuth";
+
 export function Register({ navigation }: AppScreenProps<"register">) {
   const { isLoaded, signUp, setActive } = useSignUp();
+  const { handleSocialPress } = useSocialAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -48,17 +51,16 @@ export function Register({ navigation }: AppScreenProps<"register">) {
       if (result.createdSessionId) {
         await setActive({ session: result.createdSessionId });
       } else {
-        // Este 'else' pode ser usado no futuro para o fluxo de verificação de e-mail
+        // Futuro fluxo de verificação de e-mail pode ser tratado aqui
       }
     } catch (err: any) {
       const errorMessage = handleClerkError(err);
       Alert.alert("Erro no Cadastro", errorMessage);
-
-      // console.error("ERRO COMPLETO DO CLERK:", JSON.stringify(err, null, 2));
     } finally {
       setIsLoading(false);
     }
   };
+
   return (
     <SafeAreaView className="flex-1 bg-white">
       <KeyboardAvoidingView
@@ -70,10 +72,10 @@ export function Register({ navigation }: AppScreenProps<"register">) {
           showsVerticalScrollIndicator={false}
         >
           <View className="p-8">
-            <Text className="text-5xl font-bold text-green-logo mb-2 font-[Inter_700Bold]">
+            <Text className="text-5xl font-bold text-green-logo mb-2">
               Criar Conta
             </Text>
-            <Text className="text-xl text-gray-600 mb-10 font-[Inter_400Regular]">
+            <Text className="text-xl text-gray-600 mb-10 font-regular">
               Junte-se à nossa comunidade de exploradores da natureza.
             </Text>
 
@@ -116,7 +118,7 @@ export function Register({ navigation }: AppScreenProps<"register">) {
                 hasShadow={true}
                 shadowColor="#2A9D8F"
                 className="bg-green-logo py-5 rounded-xl items-center justify-center"
-                textClassName="text-white font-bold text-lg font-[Inter_700Bold]"
+                textClassName="text-white font-bold text-lg"
               />
             </View>
 
@@ -129,7 +131,7 @@ export function Register({ navigation }: AppScreenProps<"register">) {
               </Text>
             </TouchableOpacity>
 
-            <SocialAuthButtons />
+            <SocialAuthButtons onPress={handleSocialPress} />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
