@@ -1,26 +1,38 @@
 import { Loading } from "@/components/Loading";
 import "./src/theme/global.css";
-
 import {
+  useFonts,
   Inter_400Regular,
   Inter_700Bold,
-  useFonts,
 } from "@expo-google-fonts/inter";
-import { StatusBar, View } from "react-native";
+import { StatusBar } from "react-native";
 import { Routes } from "@/routes";
+import { ClerkProvider } from "@clerk/clerk-expo";
 
 export default function App() {
   const [isFontsLoaded] = useFonts({ Inter_400Regular, Inter_700Bold });
 
+  const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
+  if (!publishableKey) {
+    throw new Error(
+      "Missing Clerk Publishable Key. Make sure to set it in your .env file."
+    );
+  }
+
+  if (!isFontsLoaded) {
+    return <Loading />;
+  }
+
   return (
-    <>
+    <ClerkProvider publishableKey={publishableKey}>
       <StatusBar
         barStyle="dark-content"
         backgroundColor="transparent"
         translucent
       />
 
-      {isFontsLoaded ? <Routes /> : <Loading />}
-    </>
+      <Routes />
+    </ClerkProvider>
   );
 }
