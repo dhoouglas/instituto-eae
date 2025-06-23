@@ -7,25 +7,58 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from "react-native";
 import { AppScreenProps } from "@/routes/app.routes";
 
-// Nossos componentes reutilizáveis em ação!
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
 import SocialAuthButtons from "@/components/SocialAuthButtons";
 
+import { useSignUp } from "@clerk/clerk-expo";
+import { handleClerkError } from "@/utils/errors/clerkErrorHandler";
+
 export function Register({ navigation }: AppScreenProps<"register">) {
-  // Estados para os três campos de texto
+  const { isLoaded, signUp, setActive } = useSignUp();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-
-  // Estado para controlar o foco dos inputs
+  const [isLoading, setIsLoading] = useState(false);
   const [focusedInput, setFocusedInput] = useState<
     "email" | "password" | "confirm" | null
   >(null);
 
+  const onSignUpPress = async () => {
+    if (!isLoaded) {
+      return;
+    }
+    if (password !== confirmPassword) {
+      Alert.alert("Erro", "As senhas não coincidem.");
+      return;
+    }
+    setIsLoading(true);
+
+    try {
+      const result = await signUp.create({
+        emailAddress: email,
+        password: password,
+      });
+
+      if (result.createdSessionId) {
+        await setActive({ session: result.createdSessionId });
+      } else {
+        // Este 'else' pode ser usado no futuro para o fluxo de verificação de e-mail
+      }
+    } catch (err: any) {
+      const errorMessage = handleClerkError(err);
+      Alert.alert("Erro no Cadastro", errorMessage);
+
+      // console.error("ERRO COMPLETO DO CLERK:", JSON.stringify(err, null, 2));
+    } finally {
+      setIsLoading(false);
+    }
+  };
   return (
     <SafeAreaView className="flex-1 bg-white">
       <KeyboardAvoidingView
@@ -37,26 +70,23 @@ export function Register({ navigation }: AppScreenProps<"register">) {
           showsVerticalScrollIndicator={false}
         >
           <View className="p-8">
-            {/* Título e Subtítulo com a temática do app */}
-            <Text className="text-5xl font-bold text-green-logo mb-2">
+            <Text className="text-5xl font-bold text-green-logo mb-2 font-[Inter_700Bold]">
               Criar Conta
             </Text>
-            <Text className="text-xl text-gray-600 mb-10 font-regular">
+            <Text className="text-xl text-gray-600 mb-10 font-[Inter_400Regular]">
               Junte-se à nossa comunidade de exploradores da natureza.
             </Text>
 
-            {/* Campos de Entrada reutilizando o componente Input */}
             <Input
               isFocused={focusedInput === "email"}
               onFocus={() => setFocusedInput("email")}
               onBlur={() => setFocusedInput(null)}
               placeholder="Seu melhor e-mail"
-              keyboardType="email-address"
-              autoCapitalize="none"
               value={email}
               onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
             />
-
             <Input
               isFocused={focusedInput === "password"}
               onFocus={() => setFocusedInput("password")}
@@ -67,8 +97,6 @@ export function Register({ navigation }: AppScreenProps<"register">) {
               value={password}
               onChangeText={setPassword}
             />
-
-            {/* Terceiro campo de input adicionado */}
             <Input
               isFocused={focusedInput === "confirm"}
               onFocus={() => setFocusedInput("confirm")}
@@ -80,20 +108,18 @@ export function Register({ navigation }: AppScreenProps<"register">) {
               onChangeText={setConfirmPassword}
             />
 
-            {/* Botão de Cadastrar reutilizável */}
             <View className="mt-8">
               <Button
                 title="Cadastrar"
-                // Simula o cadastro e leva para a tela principal
-                onPress={() => navigation.navigate("home")}
+                onPress={onSignUpPress}
+                isLoading={isLoading}
                 hasShadow={true}
-                shadowColor="#2A9D8F" // Coloque a cor do seu 'green-logo'
+                shadowColor="#2A9D8F"
                 className="bg-green-logo py-5 rounded-xl items-center justify-center"
-                textClassName="text-white font-bold text-lg"
+                textClassName="text-white font-bold text-lg font-[Inter_700Bold]"
               />
             </View>
 
-            {/* Link para voltar à tela de Login */}
             <TouchableOpacity
               className="mt-6"
               onPress={() => navigation.navigate("login")}
