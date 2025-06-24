@@ -19,6 +19,7 @@ import { useSignUp } from "@clerk/clerk-expo";
 import { handleClerkError } from "@/utils/errors/clerkErrorHandler";
 
 import { useSocialAuth } from "@/hooks/useSocialAuth";
+import Toast from "react-native-toast-message";
 
 export function Register({ navigation }: AppScreenProps<"register">) {
   const { isLoaded, signUp, setActive } = useSignUp();
@@ -50,6 +51,12 @@ export function Register({ navigation }: AppScreenProps<"register">) {
 
       if (result.createdSessionId) {
         await setActive({ session: result.createdSessionId });
+
+        Toast.show({
+          type: "success",
+          text1: "Cadastro realizado com sucesso! ",
+          text2: "Seja bem-vindo(a) de volta. 👋",
+        });
       } else {
         // Futuro fluxo de verificação de e-mail pode ser tratado aqui
       }

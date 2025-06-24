@@ -16,6 +16,7 @@ import { useSignIn } from "@clerk/clerk-expo";
 import { handleClerkError } from "@/utils/errors/clerkErrorHandler";
 import { useSocialAuth } from "@/hooks/useSocialAuth";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import Toast from "react-native-toast-message";
 
 export function Login({ navigation }: AppScreenProps<"login">) {
   const { signIn, setActive, isLoaded } = useSignIn();
@@ -39,17 +40,24 @@ export function Login({ navigation }: AppScreenProps<"login">) {
         strategy: "reset_password_email_code",
         identifier: email,
       });
-      Alert.alert(
-        "Verifique seu E-mail",
-        "Enviamos um código de verificação para o seu e-mail."
-      );
+
+      Toast.show({
+        type: "success",
+        text1: "Código Enviado!",
+        text2: "Enviamos um código de verificação para o seu e-mail.",
+      });
     } catch (err: any) {
       const errorMessage = handleClerkError(err);
-      Alert.alert("Erro", errorMessage);
+      Toast.show({
+        type: "error",
+        text1: "Erro ao Enviar Código",
+        text2: errorMessage,
+      });
     } finally {
       setIsLoading(false);
     }
   };
+
   const onResetPassword = async () => {
     if (!isLoaded) return;
     setIsLoading(true);
@@ -61,10 +69,21 @@ export function Login({ navigation }: AppScreenProps<"login">) {
       });
 
       await setActive({ session: result.createdSessionId });
-      Alert.alert("Sucesso!", "Sua senha foi alterada.");
+
+      setTimeout(() => {
+        Toast.show({
+          type: "success",
+          text1: "Senha Alterada com Sucesso!",
+          text2: "Você já está logado.",
+        });
+      }, 500);
     } catch (err: any) {
       const errorMessage = handleClerkError(err);
-      Alert.alert("Erro na Redefinição", errorMessage);
+      Toast.show({
+        type: "error",
+        text1: "Erro na Redefinição",
+        text2: errorMessage,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -79,6 +98,12 @@ export function Login({ navigation }: AppScreenProps<"login">) {
         password,
       });
       await setActive({ session: completeSignIn.createdSessionId });
+
+      Toast.show({
+        type: "success",
+        text1: "Login realizado com sucesso!",
+        text2: "Seja bem-vindo(a) de volta. 👋",
+      });
     } catch (err: any) {
       const errorMessage = handleClerkError(err);
       Alert.alert("Erro no Login", errorMessage);
@@ -126,7 +151,6 @@ export function Login({ navigation }: AppScreenProps<"login">) {
                 onChangeText={setPassword}
               />
 
-              {/* O link agora muda a 'view' da tela */}
               <TouchableOpacity
                 className="self-end my-5"
                 onPress={() => setView("forgot-password")}

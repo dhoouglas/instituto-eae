@@ -8,6 +8,8 @@ const clerkErrorMap: { [key: string]: string } = {
     "Este endereço de e-mail já está em uso. Tente fazer login ou use um e-mail diferente.",
   form_password_length_too_short:
     "Sua senha precisa ter no mínimo 8 caracteres.",
+  session_exists:
+    "Você já está autenticado. Para trocar de conta, por favor, saia primeiro.",
 };
 
 export function handleClerkError(error: any): string {

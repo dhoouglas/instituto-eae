@@ -1,15 +1,28 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { View, Text, SafeAreaView } from "react-native";
 
 import { useAuth, useUser } from "@clerk/clerk-expo";
 
 import { Button } from "@/components/Button";
 import { Loading } from "@/components/Loading";
+import Toast from "react-native-toast-message";
 
 export function Home() {
   const { signOut } = useAuth();
 
   const { isLoaded: isUserLoaded, user } = useUser();
+
+  useEffect(() => {
+    if (isUserLoaded) {
+      Toast.show({
+        type: "success",
+        text1: `Bem-vindo(a) de volta!`,
+        text2:
+          user?.primaryEmailAddress?.emailAddress ||
+          "Explorador(a) da natureza!",
+      });
+    }
+  }, [isUserLoaded]);
 
   const onSignOutPress = () => {
     signOut();
