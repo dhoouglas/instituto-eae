@@ -30,7 +30,8 @@
     "react-native-screens": "~4.11.1",
     "react-native-svg": "15.11.2",
     "react-native-svg-transformer": "^1.5.1",
-    "react-native-toast-message": "^2.3.0"
+    "react-native-toast-message": "^2.3.0",
+    "zod": "^3.25.67"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

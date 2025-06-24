@@ -16,6 +16,14 @@ import { useSignIn } from "@clerk/clerk-expo";
 import { handleClerkError } from "@/utils/errors/clerkErrorHandler";
 import { useSocialAuth } from "@/hooks/useSocialAuth";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+
+import { z } from "zod";
+import {
+  signInSchema,
+  forgotPasswordRequestSchema,
+  forgotPasswordResetSchema,
+} from "@/utils/schemas/authSchemas";
+
 import Toast from "react-native-toast-message";
 
 export function Login({ navigation }: AppScreenProps<"login">) {
@@ -33,6 +41,15 @@ export function Login({ navigation }: AppScreenProps<"login">) {
   const [newPassword, setNewPassword] = useState("");
 
   const onRequestReset = async () => {
+    const validation = forgotPasswordRequestSchema.safeParse({ email });
+    if (!validation.success) {
+      Toast.show({
+        type: "error",
+        text1: "E-mail Inválido",
+        text2: validation.error.errors[0].message,
+      });
+      return;
+    }
     if (!isLoaded) return;
     setIsLoading(true);
     try {
@@ -51,7 +68,7 @@ export function Login({ navigation }: AppScreenProps<"login">) {
       Toast.show({
         type: "error",
         text1: "Erro ao Enviar Código",
-        text2: errorMessage,
+        text2: "Verique o e-mail digitado",
       });
     } finally {
       setIsLoading(false);
@@ -59,6 +76,18 @@ export function Login({ navigation }: AppScreenProps<"login">) {
   };
 
   const onResetPassword = async () => {
+    const validation = forgotPasswordResetSchema.safeParse({
+      code,
+      newPassword,
+    });
+    if (!validation.success) {
+      Toast.show({
+        type: "error",
+        text1: "Dados Inválidos",
+        text2: validation.error.errors[0].message,
+      });
+      return;
+    }
     if (!isLoaded) return;
     setIsLoading(true);
     try {
@@ -90,6 +119,15 @@ export function Login({ navigation }: AppScreenProps<"login">) {
   };
 
   const onSignInPress = async () => {
+    const validation = signInSchema.safeParse({ email, password });
+    if (!validation.success) {
+      Toast.show({
+        type: "error",
+        text1: "Dados Inválidos",
+        text2: validation.error.errors[0].message,
+      });
+      return;
+    }
     if (!isLoaded) return;
     setIsLoading(true);
     try {
@@ -106,7 +144,11 @@ export function Login({ navigation }: AppScreenProps<"login">) {
       });
     } catch (err: any) {
       const errorMessage = handleClerkError(err);
-      Alert.alert("Erro no Login", errorMessage);
+      Toast.show({
+        type: "error",
+        text1: "Erro no Login",
+        text2: errorMessage,
+      });
     } finally {
       setIsLoading(false);
     }

@@ -21,6 +21,9 @@ import { handleClerkError } from "@/utils/errors/clerkErrorHandler";
 import { useSocialAuth } from "@/hooks/useSocialAuth";
 import Toast from "react-native-toast-message";
 
+import { z } from "zod";
+import { signUpSchema } from "@/utils/schemas/authSchemas";
+
 export function Register({ navigation }: AppScreenProps<"register">) {
   const { isLoaded, signUp, setActive } = useSignUp();
   const { handleSocialPress } = useSocialAuth();
@@ -34,6 +37,20 @@ export function Register({ navigation }: AppScreenProps<"register">) {
   >(null);
 
   const onSignUpPress = async () => {
+    const validation = signUpSchema.safeParse({
+      email,
+      password,
+      confirmPassword,
+    });
+
+    if (!validation.success) {
+      Toast.show({
+        type: "error",
+        text1: "Dados Inválidos",
+        text2: validation.error.errors[0].message,
+      });
+      return;
+    }
     if (!isLoaded) {
       return;
     }
