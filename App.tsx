@@ -8,6 +8,7 @@ import {
 import { StatusBar } from "react-native";
 import { Routes } from "@/routes";
 import { ClerkProvider } from "@clerk/clerk-expo";
+import Toast from "react-native-toast-message";
 
 export default function App() {
   const [isFontsLoaded] = useFonts({ Inter_400Regular, Inter_700Bold });
@@ -25,14 +26,18 @@ export default function App() {
   }
 
   return (
-    <ClerkProvider publishableKey={publishableKey}>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor="transparent"
-        translucent
-      />
+    <>
+      <ClerkProvider publishableKey={publishableKey}>
+        <StatusBar
+          barStyle="dark-content"
+          backgroundColor="transparent"
+          translucent
+        />
 
-      <Routes />
-    </ClerkProvider>
+        <Routes />
+      </ClerkProvider>
+
+      <Toast />
+    </>
   );
 }
