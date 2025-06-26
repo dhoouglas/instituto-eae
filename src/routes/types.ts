@@ -16,6 +16,10 @@ export type RootParamList = {
   // Telas DENTRO da pilha de Eventos
   eventsList: undefined;
   createEvent: undefined;
+
+  // Telas Dentro da pilha de Fauna e Flora
+  faunaFloraList: undefined;
+  createFaunaFlora: undefined;
 };
 
 export type AppTabScreenProps<T extends keyof RootParamList> =

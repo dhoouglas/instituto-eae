@@ -4,10 +4,10 @@ import { FontAwesome } from "@expo/vector-icons";
 import { RootParamList, AppTabScreenProps } from "./types";
 
 import { Home } from "@/screens/Home";
-import { FaunaFlora } from "@/screens/FaunaFlora";
 import { Profile } from "@/screens/Profile";
 
 import { EventsStackNavigator } from "./events.route";
+import { FaunaFloraStackNavigator } from "./faunaflora.routes";
 
 const Tab = createBottomTabNavigator<RootParamList>();
 
@@ -56,7 +56,7 @@ export function AppRoutes() {
       />
       <Tab.Screen
         name="faunaeflora"
-        component={FaunaFlora}
+        component={FaunaFloraStackNavigator}
         options={{
           headerShown: false,
           tabBarLabel: "Fauna & Flora",
