@@ -10,6 +10,7 @@ export function EventsStackNavigator() {
   return (
     <Stack.Navigator
       screenOptions={{
+        headerShown: false,
         headerStyle: { backgroundColor: "#2A9D8F" },
         headerTintColor: "#fff",
         headerTitleStyle: {

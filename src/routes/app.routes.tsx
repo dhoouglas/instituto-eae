@@ -16,10 +16,10 @@ export function AppRoutes() {
     <Tab.Navigator
       screenOptions={{
         // headerShown como undefined aqui, para controlar por tela
-        tabBarActiveTintColor: "#2A9D8F",
-        tabBarInactiveTintColor: "#A1A1AA",
+        tabBarActiveTintColor: "#488A35",
+        tabBarInactiveTintColor: "#54341c",
         tabBarStyle: {
-          height: 64,
+          height: 80,
           paddingTop: 8,
           paddingBottom: 8,
           borderTopWidth: 0,
