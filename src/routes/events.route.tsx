@@ -2,7 +2,8 @@ import { createStackNavigator } from "@react-navigation/stack";
 import { RootParamList } from "./types";
 
 import { EventsListScreen } from "@/screens/Events/List";
-import { CreateEventScreen } from "@/screens/Events/Create";
+import { EventFormScreen } from "@/screens/Events/Form";
+import { EventDetailsScreen } from "@/screens/Events/Details";
 
 const Stack = createStackNavigator<RootParamList>();
 
@@ -25,9 +26,16 @@ export function EventsStackNavigator() {
       />
       <Stack.Screen
         name="createEvent"
-        component={CreateEventScreen}
+        component={EventFormScreen}
         options={{ title: "Criar Novo Evento" }}
       />
+      <Stack.Screen
+        name="editEvent"
+        component={EventFormScreen}
+        options={{ title: "Editar Evento" }}
+      />
+
+      <Stack.Screen name="eventDetail" component={EventDetailsScreen} />
     </Stack.Navigator>
   );
 }

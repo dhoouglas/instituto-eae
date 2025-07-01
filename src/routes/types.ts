@@ -16,6 +16,8 @@ export type RootParamList = {
   // Telas DENTRO da pilha de Eventos
   eventsList: undefined;
   createEvent: undefined;
+  eventDetail: { eventId: string };
+  editEvent: { eventId: string };
 
   // Telas Dentro da pilha de Fauna e Flora
   faunaFloraList: undefined;
