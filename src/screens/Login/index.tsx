@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   Alert,
 } from "react-native";
-import { AppScreenProps } from "@/routes/app.routes";
+import { AppStackScreenProps } from "@/routes/types";
 
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
@@ -26,7 +26,7 @@ import {
 
 import Toast from "react-native-toast-message";
 
-export function Login({ navigation }: AppScreenProps<"login">) {
+export function Login({ navigation }: AppStackScreenProps<"login">) {
   const { signIn, setActive, isLoaded } = useSignIn();
   const { handleSocialPress } = useSocialAuth();
 
