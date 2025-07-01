@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -25,6 +25,8 @@ import { Input } from "@/components/Input";
 import { createEventSchema } from "@/utils/schemas/eventSchemas";
 import { useAuth } from "@clerk/clerk-expo";
 import api from "@/lib/api";
+import { useRoute, RouteProp } from "@react-navigation/native";
+import { RootParamList } from "@/routes/types";
 
 const InputWithLabel = ({
   label,
@@ -47,16 +49,31 @@ const InputWithLabel = ({
   </View>
 );
 
-export function CreateEventScreen() {
+type EventFormScreenRouteProp = RouteProp<
+  RootParamList,
+  "createEvent" | "editEvent"
+>;
+
+export function EventFormScreen() {
   const { getToken } = useAuth();
   const navigation = useNavigation();
+
+  const route = useRoute<EventFormScreenRouteProp>();
+  const { eventId } = route.params || {};
+  const isEditMode = !!eventId;
+
   const [isLoading, setIsLoading] = useState(false);
-  const [title, setTitle] = useState("");
-  const [location, setLocation] = useState("");
-  const [description, setDescription] = useState("");
-  const [image, setImage] = useState<ImagePicker.ImagePickerAsset | null>(null);
-  const [date, setDate] = useState(new Date());
+  const [formData, setFormData] = useState({
+    title: "",
+    location: "",
+    description: "",
+    date: new Date(),
+    imageUrl: "",
+  });
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [newImage, setNewImage] = useState<ImagePicker.ImagePickerAsset | null>(
+    null
+  );
 
   const handleSelectImage = async () => {
     const permissionResult =
@@ -78,37 +95,112 @@ export function CreateEventScreen() {
     });
 
     if (!pickerResult.canceled) {
-      setImage(pickerResult.assets[0]);
+      setNewImage(pickerResult.assets[0]);
     }
   };
 
   const onChangeDate = (event: DateTimePickerEvent, selectedDate?: Date) => {
     setShowDatePicker(false);
     if (selectedDate) {
-      setDate(selectedDate);
+      handleInputChange("date", selectedDate);
     }
   };
 
-  async function handleCreateEvent() {
+  const handleInputChange = (
+    field: keyof typeof formData,
+    value: string | Date
+  ) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  // async function handleCreateEvent() {
+  //   setIsLoading(true);
+
+  //   if (!image) {
+  //     Toast.show({
+  //       type: "error",
+  //       text1: "Imagem Obrigatória",
+  //       text2: "Por favor, selecione uma imagem de capa para o evento.",
+  //     });
+  //     setIsLoading(false);
+  //     return;
+  //   }
+
+  //   const validation = createEventSchema.safeParse({
+  //     title,
+  //     date: date.toISOString(),
+  //     location,
+  //     description,
+  //   });
+
+  //   if (!validation.success) {
+  //     Toast.show({
+  //       type: "error",
+  //       text1: "Dados Inválidos",
+  //       text2: validation.error.errors[0].message,
+  //     });
+  //     setIsLoading(false);
+  //     return;
+  //   }
+
+  //   try {
+  //     const token = await getToken({ template: "api-testing-token" });
+  //     if (!token) {
+  //       throw new Error("Não foi possível obter o token de autenticação.");
+  //     }
+
+  //     // --- PASSO 3: UPLOAD DA IMAGEM (LÓGICA FUTURA) ---
+  //     // TODO: Aqui entrará a lógica para fazer o upload do arquivo 'image.uri'
+  //     // para o Supabase Storage. Esta lógica retornará a URL pública da imagem.
+  //     // Exemplo: const imageUrl = await uploadParaSupabase(image.uri);
+
+  //     // Por enquanto, estou usando uma URL de placeholder para simular o sucesso.
+  //     const imageUrl = `https://picsum.photos/seed/${Date.now()}/400/300`;
+  //     const eventData = { ...validation.data, imageUrl };
+
+  //     if (isEditMode) {
+  //       // --- MODO EDIÇÃO: Usa a rota PUT ---
+  //       await api.put(`/events/${eventId}`, eventData, {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       });
+  //       Toast.show({
+  //         type: "success",
+  //         text1: "Sucesso!",
+  //         text2: "Evento atualizado.",
+  //       });
+  //     } else {
+  //       // --- MODO CRIAÇÃO: Usa a rota POST ---
+  //       await api.post("/events", eventData, {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       });
+  //       Toast.show({
+  //         type: "success",
+  //         text1: "Sucesso!",
+  //         text2: "Evento criado.",
+  //       });
+  //     }
+  //     navigation.goBack();
+  //   } catch (error) {
+  //     console.error("Erro completo ao criar evento:", error);
+  //     Toast.show({
+  //       type: "error",
+  //       text1: "Erro ao Criar Evento",
+  //       text2: "Não foi possível salvar o evento. Tente novamente.",
+  //     });
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // }
+
+  async function handleSaveEvent() {
     setIsLoading(true);
 
-    if (!image) {
-      Toast.show({
-        type: "error",
-        text1: "Imagem Obrigatória",
-        text2: "Por favor, selecione uma imagem de capa para o evento.",
-      });
-      setIsLoading(false);
-      return;
-    }
-
+    // Validamos apenas os dados de texto/data
+    const { date, ...textData } = formData;
     const validation = createEventSchema.safeParse({
-      title,
+      ...textData,
       date: date.toISOString(),
-      location,
-      description,
     });
-
     if (!validation.success) {
       Toast.show({
         type: "error",
@@ -119,39 +211,45 @@ export function CreateEventScreen() {
       return;
     }
 
+    if (!isEditMode && !newImage) {
+      Toast.show({ type: "error", text1: "Imagem Obrigatória" });
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const token = await getToken({ template: "api-testing-token" });
-      if (!token) {
-        throw new Error("Não foi possível obter o token de autenticação.");
+      let finalImageUrl = formData.imageUrl;
+
+      if (newImage) {
+        // TODO: Lógica real de upload da 'newImage.uri' para o Supabase
+        console.log("Simulando upload de nova imagem...");
+        finalImageUrl = `https://picsum.photos/seed/${Date.now()}/400/300`;
       }
 
-      // --- PASSO 3: UPLOAD DA IMAGEM (LÓGICA FUTURA) ---
-      // TODO: Aqui entrará a lógica para fazer o upload do arquivo 'image.uri'
-      // para o Supabase Storage. Esta lógica retornará a URL pública da imagem.
-      // Exemplo: const imageUrl = await uploadParaSupabase(image.uri);
+      const dataPayload = { ...validation.data, imageUrl: finalImageUrl };
 
-      // Por enquanto, estou usando uma URL de placeholder para simular o sucesso.
-      const imageUrl = `https://picsum.photos/seed/${Date.now()}/400/300`;
-
-      await api.post(
-        "/events",
-        {
-          ...validation.data,
-          imageUrl: imageUrl,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      Toast.show({
-        type: "success",
-        text1: "Sucesso!",
-        text2: "O evento foi criado e publicado.",
-      });
-
+      if (isEditMode) {
+        // MODO EDIÇÃO: Usa a rota PUT
+        await api.put(`/events/${eventId}`, dataPayload, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        Toast.show({
+          type: "success",
+          text1: "Sucesso!",
+          text2: "Evento atualizado.",
+        });
+      } else {
+        // MODO CRIAÇÃO: Usa a rota POST
+        await api.post("/events", dataPayload, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        Toast.show({
+          type: "success",
+          text1: "Sucesso!",
+          text2: "Evento criado.",
+        });
+      }
       navigation.goBack();
     } catch (error) {
       console.error("Erro completo ao criar evento:", error);
@@ -165,6 +263,34 @@ export function CreateEventScreen() {
     }
   }
 
+  useEffect(() => {
+    if (isEditMode) {
+      setIsLoading(true);
+      const fetchEventData = async () => {
+        try {
+          const response = await api.get(`/events/${eventId}`);
+          const event = response.data.event;
+          setFormData({
+            title: event.title,
+            location: event.location,
+            description: event.description,
+            date: new Date(event.date),
+            imageUrl: event.imageUrl,
+          });
+        } catch (error) {
+          Toast.show({
+            type: "error",
+            text1: "Erro ao carregar dados do evento.",
+          });
+          navigation.goBack();
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      fetchEventData();
+    }
+  }, [eventId, isEditMode, navigation]);
+
   return (
     <SafeAreaView className="flex-1 bg-white">
       <View
@@ -175,7 +301,7 @@ export function CreateEventScreen() {
       >
         <View className="px-6 pt-6 pb-4">
           <Text className="text-3xl font-bold text-gray-800 font-[Inter_700Bold]">
-            Criar Novo Evento
+            {isEditMode ? "Editar Evento" : "Criar Novo Evento"}
           </Text>
           <Text className="text-base text-gray-500 mt-1">
             Preencha os detalhes para divulgar uma nova ação ou evento.
@@ -199,9 +325,15 @@ export function CreateEventScreen() {
               onPress={handleSelectImage}
               className="w-full h-48 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 items-center justify-center mb-6"
             >
-              {image ? (
+              {newImage ? (
                 <Image
-                  source={{ uri: image.uri }}
+                  source={{ uri: newImage.uri }}
+                  className="w-full h-full rounded-xl"
+                  resizeMode="cover"
+                />
+              ) : formData.imageUrl ? (
+                <Image
+                  source={{ uri: formData.imageUrl }}
                   className="w-full h-full rounded-xl"
                   resizeMode="cover"
                 />
@@ -219,15 +351,15 @@ export function CreateEventScreen() {
               label="Título do Evento"
               icon="pencil"
               placeholder="Ex: Mutirão de Limpeza"
-              value={title}
-              onChangeText={setTitle}
+              value={formData.title}
+              onChangeText={(val) => handleInputChange("title", val)}
             />
             <InputWithLabel
               label="Localização"
               icon="map-marker"
               placeholder="Ex: Parque Ibirapuera, SP"
-              value={location}
-              onChangeText={setLocation}
+              value={formData.location}
+              onChangeText={(text) => handleInputChange("location", text)}
             />
 
             <Text className="text-base font-bold text-gray-700 mb-2">
@@ -239,13 +371,15 @@ export function CreateEventScreen() {
             >
               <FontAwesome name="calendar" size={20} color="#6B7280" />
               <Text className="text-lg text-gray-800 ml-3">
-                {date.toLocaleDateString("pt-BR", { dateStyle: "long" })}
+                {formData.date.toLocaleDateString("pt-BR", {
+                  dateStyle: "long",
+                })}
               </Text>
             </TouchableOpacity>
 
             {showDatePicker && (
               <DateTimePicker
-                value={date}
+                value={formData.date}
                 mode="date"
                 display="default"
                 onChange={onChangeDate}
@@ -257,8 +391,8 @@ export function CreateEventScreen() {
             </Text>
             <TextInput
               placeholder="Descreva os detalhes do evento..."
-              value={description}
-              onChangeText={setDescription}
+              value={formData.description}
+              onChangeText={(text) => handleInputChange("description", text)}
               multiline
               numberOfLines={6}
               className="w-full border border-gray-300 rounded-xl p-4 text-base h-36 bg-gray-100 align-top"
@@ -267,8 +401,8 @@ export function CreateEventScreen() {
 
             <View className="mt-8 mb-4">
               <Button
-                title="Salvar Evento"
-                onPress={handleCreateEvent}
+                title={isEditMode ? "Salvar Alterações" : "Salvar Evento"}
+                onPress={handleSaveEvent}
                 isLoading={isLoading}
                 className="bg-green-logo py-4 rounded-xl items-center justify-center"
                 textClassName="text-white text-lg font-bold"
