@@ -57,22 +57,36 @@ const EventCard = ({
   item,
   isAdmin,
   onDelete,
+  onEdit,
+  onPress,
 }: {
   item: Event;
   isAdmin: boolean;
   onDelete: () => void;
+  onEdit: () => void;
+  onPress: () => void;
 }) => (
   <TouchableOpacity
+    onPress={onPress}
     className="bg-white rounded-xl shadow-md mb-5 overflow-hidden"
     activeOpacity={0.8}
   >
     {isAdmin && (
-      <TouchableOpacity
-        onPress={onDelete}
-        className="absolute bottom-3 right-3 bg-green-800/80 p-2 rounded-lg z-10"
-      >
-        <FontAwesome name="trash" size={16} color="white" />
-      </TouchableOpacity>
+      <View className="absolute bottom-3 right-3 flex-row gap-1 z-10">
+        <TouchableOpacity
+          onPress={onEdit}
+          className="bg-green-800/80 w-8 h-8 rounded-lg items-center justify-center shadow"
+        >
+          <FontAwesome name="pencil" size={16} color="white" />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={onDelete}
+          className="bg-green-800/80 w-8 h-8 rounded-lg items-center justify-center shadow"
+        >
+          <FontAwesome name="trash" size={16} color="white" />
+        </TouchableOpacity>
+      </View>
     )}
 
     <Image
@@ -121,6 +135,8 @@ export function EventsListScreen({ navigation }: Props) {
         item={item}
         isAdmin={isAdmin}
         onDelete={() => confirmDelete(item.id)}
+        onEdit={() => navigation.navigate("editEvent", { eventId: item.id })}
+        onPress={() => navigation.navigate("eventDetail", { eventId: item.id })}
       />
     );
   };
