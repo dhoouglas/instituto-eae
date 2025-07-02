@@ -1,27 +1,65 @@
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import React, { useState, useEffect, useCallback } from "react";
+import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
+import { useAuth } from "@clerk/clerk-expo";
+import Toast from "react-native-toast-message";
+import api from "@/lib/api";
 
-// Definimos os possíveis estados de confirmação
-type RSVPStatus = "CONFIRMED" | "MAYBE" | "DECLINED";
+export type RSVPStatus = "CONFIRMED" | "MAYBE" | "DECLINED";
 
-export function RSVPSelector() {
-  // Estado para controlar qual botão está ativo
-  const [selection, setSelection] = useState<RSVPStatus | null>(null);
+type Props = {
+  eventId: string;
+  initialStatus: RSVPStatus | null;
+};
 
-  // Função para criar o botão, evitando repetição de código
+export function RSVPSelector({ eventId, initialStatus }: Props) {
+  const { getToken } = useAuth();
+  const [selection, setSelection] = useState<RSVPStatus | null>(initialStatus);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    setSelection(initialStatus);
+  }, [initialStatus]);
+
+  const handleRsvpPress = useCallback(
+    async (status: RSVPStatus) => {
+      setIsLoading(true);
+      try {
+        const token = await getToken({ template: "api-testing-token" });
+
+        await api.post(
+          `/events/${eventId}/rsvp`,
+          { status },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        setSelection(status);
+        Toast.show({ type: "success", text1: "Sua presença foi atualizada!" });
+      } catch (error) {
+        console.error("Erro ao registrar presença:", error);
+        Toast.show({ type: "error", text1: "Erro ao salvar sua resposta." });
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [eventId, getToken]
+  );
+
   const renderButton = (status: RSVPStatus, text: string) => {
     const isSelected = selection === status;
-
-    // Estilos condicionais
     const containerClasses = isSelected ? "bg-green-logo" : "bg-green-100";
     const textClasses = isSelected ? "text-white" : "text-green-logo";
 
     return (
       <TouchableOpacity
-        onPress={() => setSelection(status)}
+        onPress={() => handleRsvpPress(status)}
+        disabled={isLoading}
         className={`flex-1 py-3 rounded-lg items-center justify-center mx-1 ${containerClasses}`}
       >
-        <Text className={`font-bold text-base ${textClasses}`}>{text}</Text>
+        {isLoading && isSelected ? (
+          <ActivityIndicator color="white" />
+        ) : (
+          <Text className={`font-bold text-base ${textClasses}`}>{text}</Text>
+        )}
       </TouchableOpacity>
     );
   };

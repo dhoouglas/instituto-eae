@@ -15,7 +15,8 @@ import { AppStackScreenProps } from "@/routes/types";
 import { FontAwesome } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
 import api from "@/lib/api";
-import { RSVPSelector } from "@/components/RSVPSelector";
+import { RSVPSelector, RSVPStatus } from "@/components/RSVPSelector";
+import { useAuth } from "@clerk/clerk-expo";
 
 type EventDetails = {
   id: string;
@@ -31,18 +32,30 @@ type EventDetailsRouteProp = AppStackScreenProps<"eventDetail">["route"];
 export function EventDetailsScreen() {
   const route = useRoute<EventDetailsRouteProp>();
   const { eventId } = route.params;
+  const { getToken } = useAuth();
 
   const [event, setEvent] = useState<EventDetails | null>(null);
+  const [myStatus, setMyStatus] = useState<RSVPStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchEventDetails = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await api.get(`/events/${eventId}`);
-      setEvent(response.data.event);
+      const token = await getToken();
+      if (!token) throw new Error("Usuário não autenticado");
+
+      const [eventResponse, attendanceResponse] = await Promise.all([
+        api.get(`/events/${eventId}`),
+        api.get(`/events/${eventId}/attendance/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
+
+      setEvent(eventResponse.data.event);
+      setMyStatus(attendanceResponse.data.attendance?.status || null);
     } catch (error) {
-      console.error("Erro ao buscar detalhes do evento:", error);
-      Toast.show({ type: "error", text1: "Erro ao carregar detalhes." });
+      console.error("Erro ao buscar dados da tela de detalhes:", error);
+      Toast.show({ type: "error", text1: "Erro ao carregar o evento." });
     } finally {
       setIsLoading(false);
     }
@@ -54,7 +67,6 @@ export function EventDetailsScreen() {
     }, [fetchEventDetails])
   );
 
-  // Função para abrir o mapa
   const handleOpenMaps = () => {
     const url = Platform.select({
       ios: `maps:0,0?q=${event?.location}`,
@@ -130,7 +142,7 @@ export function EventDetailsScreen() {
           </Text>
 
           <View className="w-full h-px bg-gray-200 my-6" />
-          <RSVPSelector />
+          <RSVPSelector eventId={event.id} initialStatus={myStatus} />
         </View>
       </ScrollView>
     </SafeAreaView>
