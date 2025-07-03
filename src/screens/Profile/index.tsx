@@ -13,6 +13,9 @@ import { FontAwesome } from "@expo/vector-icons";
 import { AppTabScreenProps } from "@/routes/types";
 import Toast from "react-native-toast-message";
 
+import { Clipboard } from "react-native";
+import { Button } from "@/components/Button";
+
 const ProfileMenuItem = ({
   icon,
   text,
@@ -42,7 +45,7 @@ const ProfileMenuItem = ({
 
 export function Profile({ navigation }: AppTabScreenProps<"profile">) {
   const { user } = useUser();
-  const { signOut } = useAuth();
+  const { signOut, getToken } = useAuth();
 
   const isAdmin = user?.publicMetadata?.role === "admin";
 
@@ -72,6 +75,23 @@ export function Profile({ navigation }: AppTabScreenProps<"profile">) {
         "Erro",
         "Não foi possível encerrar a sessão. Tente novamente."
       );
+    }
+  };
+
+  const handleCopyToken = async () => {
+    try {
+      // getToken() é a função do Clerk que retorna o JWT da sessão ativa
+      const token = await getToken({ template: "api-testing-token" });
+      if (token) {
+        Clipboard.setString(token);
+        Toast.show({
+          type: "success",
+          text1: "Token Copiado!",
+          text2: "O token de sessão foi copiado para a área de transferência.",
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao copiar token:", error);
     }
   };
 
@@ -115,6 +135,16 @@ export function Profile({ navigation }: AppTabScreenProps<"profile">) {
                 <ProfileMenuItem icon="cogs" text="Painel do Administrador" />
               </View>
             )}
+          </View>
+
+          {/* 3. Adicionado este botão temporário para teste */}
+          <View className="mt-6 border-t border-gray-200 pt-6">
+            <Button
+              title="Copiar Token de Teste (Admin)"
+              onPress={handleCopyToken}
+              className="bg-blue-500 py-4 rounded-xl"
+              textClassName="text-white font-bold"
+            />
           </View>
 
           <View className="mt-10">
