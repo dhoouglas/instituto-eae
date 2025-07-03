@@ -10,8 +10,8 @@ import {
   Linking,
   Platform,
 } from "react-native";
-import { useRoute, useFocusEffect } from "@react-navigation/native";
-import { AppStackScreenProps } from "@/routes/types";
+import { useFocusEffect } from "@react-navigation/native";
+import { EventsStackScreenProps } from "@/routes/types";
 import { FontAwesome } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
 import api from "@/lib/api";
@@ -27,10 +27,9 @@ type EventDetails = {
   description: string;
 };
 
-type EventDetailsRouteProp = AppStackScreenProps<"eventDetail">["route"];
+type Props = EventsStackScreenProps<"eventDetail">;
 
-export function EventDetailsScreen() {
-  const route = useRoute<EventDetailsRouteProp>();
+export function EventDetailsScreen({ route, navigation }: Props) {
   const { eventId } = route.params;
   const { getToken } = useAuth();
 

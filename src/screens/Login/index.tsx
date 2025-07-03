@@ -5,6 +5,8 @@ import {
   SafeAreaView,
   TouchableOpacity,
   Alert,
+  Platform,
+  StatusBar,
 } from "react-native";
 import { AppStackScreenProps } from "@/routes/types";
 
@@ -17,7 +19,6 @@ import { handleClerkError } from "@/utils/errors/clerkErrorHandler";
 import { useSocialAuth } from "@/hooks/useSocialAuth";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
-import { z } from "zod";
 import {
   signInSchema,
   forgotPasswordRequestSchema,
@@ -156,143 +157,153 @@ export function Login({ navigation }: AppStackScreenProps<"login">) {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <KeyboardAwareScrollView
-        resetScrollToCoords={{ x: 0, y: 0 }}
-        contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
+      <View
+        style={{
+          paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+          flex: 1,
+        }}
       >
-        <View className="p-8">
-          {view === "sign-in" && (
-            <>
-              <Text className="text-5xl font-bold text-green-logo mb-2 font-[Inter_700Bold]">
-                Entrar
-              </Text>
-              <Text className="text-xl text-gray-600 mb-10 font-[Inter_400Regular]">
-                Que bom te ver de volta, explorador(a)!
-              </Text>
-
-              <Input
-                isFocused={focusedInput === "email"}
-                onFocus={() => setFocusedInput("email")}
-                onBlur={() => setFocusedInput(null)}
-                placeholder="Seu e-mail"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                value={email}
-                onChangeText={setEmail}
-              />
-              <Input
-                isFocused={focusedInput === "password"}
-                onFocus={() => setFocusedInput("password")}
-                onBlur={() => setFocusedInput(null)}
-                className="mt-4"
-                placeholder="Sua senha"
-                secureTextEntry
-                value={password}
-                onChangeText={setPassword}
-              />
-
-              <TouchableOpacity
-                className="self-end my-5"
-                onPress={() => setView("forgot-password")}
-              >
-                <Text className="text-green-logo font-semibold font-regular">
-                  Esqueceu sua senha?
+        <KeyboardAwareScrollView
+          resetScrollToCoords={{ x: 0, y: 0 }}
+          contentContainerStyle={{
+            justifyContent: "center",
+            paddingBottom: 255,
+          }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View className="p-8">
+            {view === "sign-in" && (
+              <>
+                <Text className="text-5xl font-bold text-green-logo mb-2 font-[Inter_700Bold]">
+                  Entrar
                 </Text>
-              </TouchableOpacity>
-
-              <Button
-                title="Entrar"
-                onPress={onSignInPress}
-                isLoading={isLoading}
-                className="bg-green-logo py-5 rounded-xl items-center justify-center"
-                textClassName="text-white font-bold text-lg"
-                hasShadow={true}
-                shadowColor="#2A9D8F"
-              />
-              <TouchableOpacity
-                className="mt-6"
-                onPress={() => navigation.navigate("register")}
-              >
-                <Text className="text-black text-center font-semibold font-regular">
-                  Criar uma nova conta
+                <Text className="text-xl text-gray-600 mb-10 font-[Inter_400Regular]">
+                  Que bom te ver de volta, explorador(a)!
                 </Text>
-              </TouchableOpacity>
-              <SocialAuthButtons onPress={handleSocialPress} />
-            </>
-          )}
 
-          {view === "forgot-password" && (
-            <>
-              <Text className="text-5xl font-bold text-green-logo mb-2">
-                Redefinir Senha
-              </Text>
-              <Text className="text-xl text-gray-600 mb-10 font-regular]">
-                Digite seu e-mail para receber um código de verificação.
-              </Text>
+                <Input
+                  isFocused={focusedInput === "email"}
+                  onFocus={() => setFocusedInput("email")}
+                  onBlur={() => setFocusedInput(null)}
+                  placeholder="Seu e-mail"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  value={email}
+                  onChangeText={setEmail}
+                />
+                <Input
+                  isFocused={focusedInput === "password"}
+                  onFocus={() => setFocusedInput("password")}
+                  onBlur={() => setFocusedInput(null)}
+                  className="mt-4"
+                  placeholder="Sua senha"
+                  secureTextEntry
+                  value={password}
+                  onChangeText={setPassword}
+                />
 
-              <Input
-                isFocused={focusedInput === "email-reset"}
-                onFocus={() => setFocusedInput("email-reset")}
-                onBlur={() => setFocusedInput(null)}
-                placeholder="Seu e-mail"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-              <Button
-                title="Enviar Código"
-                onPress={onRequestReset}
-                isLoading={isLoading}
-                className="mt-4 bg-green-logo py-5 rounded-xl items-center justify-center"
-                textClassName="text-white font-bold text-lg"
-              />
+                <TouchableOpacity
+                  className="self-end my-5"
+                  onPress={() => setView("forgot-password")}
+                >
+                  <Text className="text-green-logo font-semibold font-regular">
+                    Esqueceu sua senha?
+                  </Text>
+                </TouchableOpacity>
 
-              <View className="w-full h-px bg-gray-200 my-8" />
+                <Button
+                  title="Entrar"
+                  onPress={onSignInPress}
+                  isLoading={isLoading}
+                  className="bg-green-logo py-5 rounded-xl items-center justify-center"
+                  textClassName="text-white font-bold text-lg"
+                  hasShadow={true}
+                  shadowColor="#2A9D8F"
+                />
+                <TouchableOpacity
+                  className="mt-6"
+                  onPress={() => navigation.navigate("register")}
+                >
+                  <Text className="text-black text-center font-semibold font-regular">
+                    Criar uma nova conta
+                  </Text>
+                </TouchableOpacity>
+                <SocialAuthButtons onPress={handleSocialPress} />
+              </>
+            )}
 
-              <Input
-                isFocused={focusedInput === "code"}
-                onFocus={() => setFocusedInput("code")}
-                onBlur={() => setFocusedInput(null)}
-                placeholder="Código de verificação"
-                value={code}
-                onChangeText={setCode}
-                keyboardType="number-pad"
-              />
-              <Input
-                isFocused={focusedInput === "new-password"}
-                onFocus={() => setFocusedInput("new-password")}
-                onBlur={() => setFocusedInput(null)}
-                className="mt-4"
-                placeholder="Sua nova senha"
-                value={newPassword}
-                onChangeText={setNewPassword}
-                secureTextEntry
-              />
-              <Button
-                title="Salvar Nova Senha"
-                onPress={onResetPassword}
-                isLoading={isLoading}
-                className="mt-4 bg-green-logo py-5 rounded-xl items-center justify-center"
-                textClassName="text-white font-bold text-lg"
-                hasShadow
-                shadowColor="#2A9D8F"
-              />
-
-              <TouchableOpacity
-                className="mt-8"
-                onPress={() => setView("sign-in")}
-              >
-                <Text className="text-black text-center font-semibold font-regular">
-                  Voltar para o Login
+            {view === "forgot-password" && (
+              <>
+                <Text className="text-5xl font-bold text-green-logo mb-2">
+                  Redefinir Senha
                 </Text>
-              </TouchableOpacity>
-            </>
-          )}
-        </View>
-      </KeyboardAwareScrollView>
+                <Text className="text-xl text-gray-600 mb-10 font-regular]">
+                  Digite seu e-mail para receber um código de verificação.
+                </Text>
+
+                <Input
+                  isFocused={focusedInput === "email-reset"}
+                  onFocus={() => setFocusedInput("email-reset")}
+                  onBlur={() => setFocusedInput(null)}
+                  placeholder="Seu e-mail"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+                <Button
+                  title="Enviar Código"
+                  onPress={onRequestReset}
+                  isLoading={isLoading}
+                  className="mt-4 bg-green-logo py-5 rounded-xl items-center justify-center"
+                  textClassName="text-white font-bold text-lg"
+                />
+
+                <View className="w-full h-px bg-gray-200 my-8" />
+
+                <Input
+                  isFocused={focusedInput === "code"}
+                  onFocus={() => setFocusedInput("code")}
+                  onBlur={() => setFocusedInput(null)}
+                  placeholder="Código de verificação"
+                  value={code}
+                  onChangeText={setCode}
+                  keyboardType="number-pad"
+                />
+                <Input
+                  isFocused={focusedInput === "new-password"}
+                  onFocus={() => setFocusedInput("new-password")}
+                  onBlur={() => setFocusedInput(null)}
+                  className="mt-4"
+                  placeholder="Sua nova senha"
+                  value={newPassword}
+                  onChangeText={setNewPassword}
+                  secureTextEntry
+                />
+                <Button
+                  title="Salvar Nova Senha"
+                  onPress={onResetPassword}
+                  isLoading={isLoading}
+                  className="mt-4 bg-green-logo py-5 rounded-xl items-center justify-center"
+                  textClassName="text-white font-bold text-lg"
+                  hasShadow
+                  shadowColor="#2A9D8F"
+                />
+
+                <TouchableOpacity
+                  className="mt-8"
+                  onPress={() => setView("sign-in")}
+                >
+                  <Text className="text-black text-center font-semibold font-regular">
+                    Voltar para o Login
+                  </Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </KeyboardAwareScrollView>
+      </View>
     </SafeAreaView>
   );
 }

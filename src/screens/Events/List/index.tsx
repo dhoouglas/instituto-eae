@@ -13,11 +13,13 @@ import {
 } from "react-native";
 import { useUser } from "@clerk/clerk-expo";
 import { FontAwesome } from "@expo/vector-icons";
-import { AppStackScreenProps } from "@/routes/types";
 import Toast from "react-native-toast-message";
 import api from "@/lib/api";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
+import { EventsStackParamList } from "@/routes/types";
 import { useAuth } from "@clerk/clerk-expo";
+import { Header } from "@/components/Header";
 
 type Event = {
   id: string;
@@ -51,7 +53,7 @@ type Event = {
 //   },
 // ];
 
-type Props = AppStackScreenProps<"eventsList">;
+type EventsNavigationProp = StackNavigationProp<EventsStackParamList>;
 
 const EventCard = ({
   item,
@@ -121,10 +123,12 @@ const EventCard = ({
   </TouchableOpacity>
 );
 
-export function EventsListScreen({ navigation }: Props) {
+export function EventsListScreen() {
   const { user } = useUser();
   const { getToken } = useAuth();
   const isAdmin = user?.publicMetadata?.role === "admin";
+
+  const navigation = useNavigation<EventsNavigationProp>();
 
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -208,9 +212,7 @@ export function EventsListScreen({ navigation }: Props) {
           flex: 1,
         }}
       >
-        <Text className="text-3xl font-bold text-green-800 font-[Inter_700Bold] px-4 pt-4 pb-2">
-          Próximos Eventos
-        </Text>
+        <Header title="Próximos Eventos" showBackButton={true} />
 
         <FlatList
           data={events}
