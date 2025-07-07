@@ -220,6 +220,7 @@ export function EventsListScreen() {
           keyExtractor={(item) => item.id}
           contentContainerStyle={{
             flexGrow: 1,
+            paddingTop: 6,
             paddingHorizontal: 24,
             paddingBottom: 90,
           }}
