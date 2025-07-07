@@ -1,11 +1,11 @@
 import { createStackNavigator } from "@react-navigation/stack";
-import { RootParamList } from "./types";
+import { EventsStackParamList } from "./types";
 
 import { EventsListScreen } from "@/screens/Events/List";
 import { EventFormScreen } from "@/screens/Events/Form";
 import { EventDetailsScreen } from "@/screens/Events/Details";
 
-const Stack = createStackNavigator<RootParamList>();
+const Stack = createStackNavigator<EventsStackParamList>();
 
 export function EventsStackNavigator() {
   return (

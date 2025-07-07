@@ -1,21 +1,25 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { FontAwesome } from "@expo/vector-icons";
 
-import { RootParamList, AppTabScreenProps } from "./types";
+import { RootParamList } from "./types";
 
 import { Home } from "@/screens/Home";
 import { Profile } from "@/screens/Profile";
 
 import { EventsStackNavigator } from "./events.route";
 import { FaunaFloraStackNavigator } from "./faunaflora.routes";
+import { useUser } from "@clerk/clerk-expo";
+import { NewsStackNavigator } from "./news.routes";
 
 const Tab = createBottomTabNavigator<RootParamList>();
 
 export function AppRoutes() {
+  const { user } = useUser();
+  const isAdmin = user?.publicMetadata?.role === "admin";
+
   return (
     <Tab.Navigator
       screenOptions={{
-        // headerShown como undefined aqui, para controlar por tela
         tabBarActiveTintColor: "#488A35",
         tabBarInactiveTintColor: "#54341c",
         tabBarStyle: {
@@ -43,6 +47,21 @@ export function AppRoutes() {
           ),
         }}
       />
+
+      {isAdmin && (
+        <Tab.Screen
+          name="news"
+          component={NewsStackNavigator}
+          options={{
+            headerShown: false,
+            tabBarLabel: "Notícias",
+            tabBarIcon: ({ color, size }) => (
+              <FontAwesome name="newspaper-o" color={color} size={size} />
+            ),
+          }}
+        />
+      )}
+
       <Tab.Screen
         name="events"
         component={EventsStackNavigator}
@@ -65,6 +84,7 @@ export function AppRoutes() {
           ),
         }}
       />
+
       <Tab.Screen
         name="profile"
         component={Profile}

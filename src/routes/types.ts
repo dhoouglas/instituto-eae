@@ -2,6 +2,13 @@ import { NavigatorScreenParams } from "@react-navigation/native";
 import { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import { StackScreenProps } from "@react-navigation/stack";
 
+export type NewsStackParamList = {
+  newsList: undefined;
+  createNews: undefined;
+  newsDetail: { newsId: string };
+  editNews: { newsId: string };
+};
+
 export type EventsStackParamList = {
   eventsList: undefined;
   createEvent: undefined;
@@ -17,6 +24,9 @@ export type RootParamList = {
 
   // Tela Home
   home: undefined;
+
+  // Tela Notícias
+  news: NavigatorScreenParams<NewsStackParamList>;
 
   // Tela Eventos
   events: NavigatorScreenParams<EventsStackParamList>;
@@ -35,6 +45,9 @@ export type AppTabScreenProps<T extends keyof RootParamList> =
 
 export type AppStackScreenProps<T extends keyof RootParamList> =
   StackScreenProps<RootParamList, T>;
+
+export type NewsStackScreenProps<T extends keyof NewsStackParamList> =
+  StackScreenProps<NewsStackParamList, T>;
 
 export type EventsStackScreenProps<T extends keyof EventsStackParamList> =
   StackScreenProps<EventsStackParamList, T>;
