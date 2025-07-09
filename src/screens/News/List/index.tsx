@@ -10,6 +10,7 @@ import {
   Alert,
   Platform,
   StatusBar,
+  ActivityIndicator,
 } from "react-native";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
@@ -20,6 +21,7 @@ import Toast from "react-native-toast-message";
 import { Header } from "@/components/Header";
 import { NewsStackParamList } from "@/routes/types";
 import api from "@/lib/api";
+import { Button } from "@/components/Button";
 
 type NewsPost = {
   id: string;
@@ -29,6 +31,16 @@ type NewsPost = {
 };
 
 type NewsNavigationProp = StackNavigationProp<NewsStackParamList, "newsList">;
+
+const NewsCardSkeleton = () => (
+  <View className="bg-white rounded-xl shadow-sm mb-4 overflow-hidden border border-gray-100">
+    <View className="w-full h-40 bg-gray-200" />
+    <View className="p-4">
+      <View className="h-4 w-1/4 bg-gray-200 rounded" />
+      <View className="h-6 w-3/4 bg-gray-200 rounded mt-2" />
+    </View>
+  </View>
+);
 
 const NewsCard = ({
   item,
@@ -48,12 +60,16 @@ const NewsCard = ({
     activeOpacity={0.8}
     className="bg-white rounded-xl shadow-sm mb-4 overflow-hidden border border-gray-100"
   >
-    {item.imageUrl && (
+    {item.imageUrl ? (
       <Image
         source={{ uri: item.imageUrl }}
         className="w-full h-40"
         resizeMode="cover"
       />
+    ) : (
+      <View className="w-full h-40 bg-gray-200 items-center justify-center">
+        <FontAwesome name="image" size={40} color="#9CA3AF" />
+      </View>
     )}
     <View className="p-4">
       <Text className="text-xs font-bold text-green-logo uppercase">
@@ -91,14 +107,18 @@ export function NewsListScreen() {
 
   const [news, setNews] = useState<NewsPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const fetchNews = useCallback(async () => {
     setIsLoading(true);
+    setFetchError(null);
     try {
       const response = await api.get("/news");
       setNews(response.data.news);
     } catch (error) {
-      Toast.show({ type: "error", text1: "Erro ao carregar notícias." });
+      const errorMessage = "Não foi possível carregar as notícias.";
+      setFetchError(errorMessage);
+      Toast.show({ type: "error", text1: errorMessage });
     } finally {
       setIsLoading(false);
     }
@@ -117,7 +137,7 @@ export function NewsListScreen() {
         headers: { Authorization: `Bearer ${token}` },
       });
       Toast.show({ type: "success", text1: "Notícia excluída com sucesso!" });
-      fetchNews();
+      setNews((prevNews) => prevNews.filter((item) => item.id !== newsId));
     } catch (error) {
       Toast.show({ type: "error", text1: "Erro ao excluir notícia." });
     }
@@ -148,6 +168,52 @@ export function NewsListScreen() {
     />
   );
 
+  const renderContent = () => {
+    if (isLoading && news.length === 0) {
+      return (
+        <View style={{ paddingHorizontal: 24, paddingTop: 6 }}>
+          <NewsCardSkeleton />
+          <NewsCardSkeleton />
+          <NewsCardSkeleton />
+        </View>
+      );
+    }
+
+    if (fetchError) {
+      return (
+        <View className="flex-1 justify-center items-center p-6">
+          <Text className="text-lg text-red-500 text-center mb-4">
+            {fetchError}
+          </Text>
+          <Button title="Tentar Novamente" onPress={fetchNews} />
+        </View>
+      );
+    }
+
+    return (
+      <FlatList
+        data={news}
+        renderItem={renderNewsItem}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={{
+          flexGrow: 1,
+          paddingTop: 6,
+          paddingHorizontal: 24,
+          paddingBottom: 90,
+        }}
+        refreshing={isLoading}
+        onRefresh={fetchNews}
+        ListEmptyComponent={
+          !isLoading ? (
+            <View className="flex-1 justify-center items-center">
+              <Text className="text-gray-500">Nenhuma notícia encontrada.</Text>
+            </View>
+          ) : null
+        }
+      />
+    );
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       <View
@@ -158,29 +224,8 @@ export function NewsListScreen() {
       >
         <Header title="Últimas Notícias" showBackButton={true} />
 
-        <FlatList
-          data={news}
-          renderItem={renderNewsItem}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={{
-            flexGrow: 1,
-            paddingTop: 6,
-            paddingHorizontal: 24,
-            paddingBottom: 90,
-          }}
-          // contentContainerStyle={{ padding: 24, paddingBottom: 100 }}
-          refreshing={isLoading}
-          onRefresh={fetchNews}
-          ListEmptyComponent={
-            !isLoading ? (
-              <View className="flex-1 justify-center items-center">
-                <Text className="text-gray-500">
-                  Nenhuma notícia encontrada.
-                </Text>
-              </View>
-            ) : null
-          }
-        />
+        {renderContent()}
+
         {isAdmin && (
           <TouchableOpacity
             onPress={() => navigation.navigate("createNews")}
