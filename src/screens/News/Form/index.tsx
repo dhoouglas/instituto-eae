@@ -26,6 +26,7 @@ import { Input } from "@/components/Input";
 import api from "@/lib/api";
 import { Header } from "@/components/Header";
 import { CategorySelector } from "@/components/CategorySelector";
+import { useStorage } from "@/hooks/useStorage";
 
 import * as ImagePicker from "expo-image-picker";
 import { FontAwesome } from "@expo/vector-icons";
@@ -34,6 +35,7 @@ type Props = NewsStackScreenProps<"createNews" | "editNews">;
 
 export function NewsFormScreen({ route, navigation }: Props) {
   const { getToken } = useAuth();
+  const { uploadImage, isUploading } = useStorage();
 
   const newsId =
     route.params && "newsId" in route.params ? route.params.newsId : undefined;
@@ -45,11 +47,10 @@ export function NewsFormScreen({ route, navigation }: Props) {
     title: "",
     category: "",
     content: "",
-    // imageUrl: "",
   });
-  const [image, setImage] = useState<{ uri: string; isNew: boolean } | null>(
-    null
-  );
+  const [imageAsset, setImageAsset] =
+    useState<ImagePicker.ImagePickerAsset | null>(null);
+  const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (isEditMode) {
@@ -63,7 +64,7 @@ export function NewsFormScreen({ route, navigation }: Props) {
             content: newsPost.content,
           });
           if (newsPost.imageUrl) {
-            setImage({ uri: newsPost.imageUrl, isNew: false });
+            setExistingImageUrl(newsPost.imageUrl);
           }
         } catch (error) {
           Toast.show({ type: "error", text1: "Erro ao carregar dados." });
@@ -76,7 +77,7 @@ export function NewsFormScreen({ route, navigation }: Props) {
     } else {
       setIsFetchingData(false);
     }
-  }, [isEditMode, newsId]);
+  }, [isEditMode, newsId, navigation]);
 
   const handleInputChange = (field: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -96,10 +97,10 @@ export function NewsFormScreen({ route, navigation }: Props) {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [16, 9],
-      quality: 0.7,
+      quality: 0.8,
     });
     if (!pickerResult.canceled) {
-      setImage({ uri: pickerResult.assets[0].uri, isNew: true });
+      setImageAsset(pickerResult.assets[0]);
     }
   };
 
@@ -119,15 +120,32 @@ export function NewsFormScreen({ route, navigation }: Props) {
       return;
     }
 
+    if (!isEditMode && !imageAsset) {
+      Toast.show({
+        type: "error",
+        text1: "Imagem Obrigatória",
+        text2: "Por favor, selecione uma imagem de capa.",
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       const token = await getToken({ template: "api-testing-token" });
-      let finalImageUrl: string | null | undefined =
-        image && !image.isNew ? image.uri : undefined;
+      let finalImageUrl = existingImageUrl;
 
-      if (image && image.isNew) {
-        // TODO: Lógica real de upload da 'image.uri' para o Supabase Storage aqui.
-        console.log("Simulando upload de nova imagem...");
-        finalImageUrl = `https://picsum.photos/seed/${Date.now()}/800/600`;
+      if (imageAsset) {
+        const uploadedUrl = await uploadImage(imageAsset);
+        if (!uploadedUrl) {
+          Toast.show({
+            type: "error",
+            text1: "Erro no Upload",
+            text2: "Não foi possível carregar a imagem. Tente novamente.",
+          });
+          setIsSubmitting(false);
+          return;
+        }
+        finalImageUrl = uploadedUrl;
       }
 
       const dataPayload = { ...validation.data, imageUrl: finalImageUrl };
@@ -152,15 +170,10 @@ export function NewsFormScreen({ route, navigation }: Props) {
         });
       }
       navigation.goBack();
-    } catch (error) {
-      let errorMessage = "Não foi possível salvar a notícia.";
-
-      if (error && typeof error === "object" && "response" in error) {
-        console.error("Erro ao salvar notícia:", (error as any).response?.data);
-      } else {
-        console.error("Erro ao salvar notícia:", error);
-      }
-
+    } catch (error: any) {
+      console.error("Erro completo ao salvar notícia:", error);
+      const errorMessage =
+        error.response?.data?.message || "Não foi possível salvar a notícia.";
       Toast.show({
         type: "error",
         text1: "Erro ao Salvar",
@@ -210,9 +223,15 @@ export function NewsFormScreen({ route, navigation }: Props) {
               onPress={handleSelectImage}
               className="w-full h-48 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 items-center justify-center mb-6"
             >
-              {image ? (
+              {imageAsset ? (
                 <Image
-                  source={{ uri: image.uri }}
+                  source={{ uri: imageAsset.uri }}
+                  className="w-full h-full rounded-xl"
+                  resizeMode="cover"
+                />
+              ) : existingImageUrl ? (
+                <Image
+                  source={{ uri: existingImageUrl }}
                   className="w-full h-full rounded-xl"
                   resizeMode="cover"
                 />
@@ -253,7 +272,7 @@ export function NewsFormScreen({ route, navigation }: Props) {
               <Button
                 title={isEditMode ? "Salvar Alterações" : "Publicar Notícia"}
                 onPress={handleSaveNews}
-                isLoading={isSubmitting}
+                isLoading={isUploading || isSubmitting}
                 className="bg-green-logo py-4 rounded-xl items-center justify-center"
                 textClassName="text-white text-lg font-bold"
                 hasShadow
