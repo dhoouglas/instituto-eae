@@ -10,6 +10,7 @@ import {
   Platform,
   StatusBar,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { useUser } from "@clerk/clerk-expo";
 import { FontAwesome } from "@expo/vector-icons";
@@ -26,32 +27,10 @@ type Event = {
   title: string;
   location: string;
   date: Date;
-  imageUrl: string;
+  imageUrl: string | null;
 };
 
-// const mockEvents: Event[] = [
-//   {
-//     id: "1",
-//     title: "Mutirão de Limpeza na Praia de Grumari",
-//     location: "Praia de Grumari, Rio de Janeiro",
-//     date: new Date("2025-08-20T09:00:00"),
-//     imageUrl: "https://picsum.photos/seed/event1/400/300",
-//   },
-//   {
-//     id: "2",
-//     title: "Plantio de Mudas na Floresta da Tijuca",
-//     location: "Setor A, Floresta da Tijuca, RJ",
-//     date: new Date("2025-09-15T08:30:00"),
-//     imageUrl: "https://picsum.photos/seed/event3/400/300",
-//   },
-//   {
-//     id: "3",
-//     title: "Palestra sobre Reciclagem e Compostagem",
-//     location: "Sede do Instituto EAE",
-//     date: new Date("2025-10-01T19:00:00"),
-//     imageUrl: "https://picsum.photos/seed/event3/400/300",
-//   },
-// ];
+const placeholderImage = require("@/assets/bg.png");
 
 type EventsNavigationProp = StackNavigationProp<EventsStackParamList>;
 
@@ -81,7 +60,6 @@ const EventCard = ({
         >
           <FontAwesome name="pencil" size={16} color="white" />
         </TouchableOpacity>
-
         <TouchableOpacity
           onPress={onDelete}
           className="bg-green-800/80 w-8 h-8 rounded-lg items-center justify-center shadow"
@@ -92,7 +70,7 @@ const EventCard = ({
     )}
 
     <Image
-      source={{ uri: item.imageUrl }}
+      source={item.imageUrl ? { uri: item.imageUrl } : placeholderImage}
       style={{ width: "100%", height: 160, backgroundColor: "#E5E7EB" }}
       resizeMode="cover"
     />
@@ -127,7 +105,6 @@ export function EventsListScreen() {
   const { user } = useUser();
   const { getToken } = useAuth();
   const isAdmin = user?.publicMetadata?.role === "admin";
-
   const navigation = useNavigation<EventsNavigationProp>();
 
   const [events, setEvents] = useState<Event[]>([]);
@@ -145,23 +122,29 @@ export function EventsListScreen() {
     );
   };
 
-  async function fetchEvents() {
+  const fetchEvents = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await api.get("/events");
+      // console.log(
+      //   "Dados brutos recebidos da API:",
+      //   JSON.stringify(response.data.events, null, 2)
+      // );
       const formattedEvents = response.data.events.map((event: any) => ({
         ...event,
         date: new Date(event.date),
       }));
-
       setEvents(formattedEvents);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao buscar eventos:", error);
-      Toast.show({ type: "error", text1: "Erro ao carregar eventos." });
+      const message =
+        error.response?.data?.message ||
+        "Não foi possível carregar os eventos.";
+      Toast.show({ type: "error", text1: "Erro", text2: message });
     } finally {
       setIsLoading(false);
     }
-  }
+  }, []);
 
   async function handleDeleteEvent(eventId: string) {
     try {
@@ -175,11 +158,16 @@ export function EventsListScreen() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
+      setEvents((currentEvents) =>
+        currentEvents.filter((event) => event.id !== eventId)
+      );
+
       Toast.show({ type: "success", text1: "Evento excluído com sucesso!" });
-      fetchEvents();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao deletar evento:", error);
-      Toast.show({ type: "error", text1: "Erro ao excluir evento." });
+      const message =
+        error.response?.data?.message || "Não foi possível excluir o evento.";
+      Toast.show({ type: "error", text1: "Erro ao excluir", text2: message });
     }
   }
 
@@ -201,7 +189,7 @@ export function EventsListScreen() {
   useFocusEffect(
     useCallback(() => {
       fetchEvents();
-    }, [])
+    }, [fetchEvents])
   );
 
   return (
@@ -235,14 +223,12 @@ export function EventsListScreen() {
                   size={48}
                   color="#D1D5DB"
                 />
-
                 <Text className="text-xl font-bold text-gray-600 mt-4 text-center">
                   Nenhum Evento Encontrado
                 </Text>
-
                 <Text className="text-base text-gray-400 mt-2 text-center">
-                  Nenhum evento agendado no momento. Os novos eventos são
-                  criados por integrantes do EAE.
+                  Ainda não há eventos futuros agendados. Fique de olho para
+                  novidades!
                 </Text>
               </View>
             )

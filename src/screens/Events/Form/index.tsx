@@ -10,6 +10,7 @@ import {
   Alert,
   TextInputProps,
   StatusBar,
+  ActivityIndicator,
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import Toast from "react-native-toast-message";
@@ -21,11 +22,15 @@ import DateTimePicker, {
 
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
-import { createEventSchema } from "@/utils/schemas/eventSchemas";
+import {
+  createEventSchema,
+  updateEventSchema,
+} from "@/utils/schemas/eventSchemas";
 import { useAuth } from "@clerk/clerk-expo";
 import api from "@/lib/api";
 import { EventsStackScreenProps } from "@/routes/types";
 import { Header } from "@/components/Header";
+import { useStorage } from "@/hooks/useStorage";
 
 const InputWithLabel = ({
   label,
@@ -50,26 +55,30 @@ const InputWithLabel = ({
 
 type Props = EventsStackScreenProps<"createEvent" | "editEvent">;
 
-export function EventFormScreen({ route }: Props) {
+export function EventFormScreen({ route, navigation }: Props) {
   const { getToken } = useAuth();
+  const { uploadImage, isUploading } = useStorage();
   const eventId =
     route.params && "eventId" in route.params
       ? route.params.eventId
       : undefined;
   const isEditMode = !!eventId;
 
-  const [isLoading, setIsLoading] = useState(false);
+  const [isFetchingData, setIsFetchingData] = useState(isEditMode);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [formData, setFormData] = useState({
     title: "",
     location: "",
     description: "",
     date: new Date(),
-    imageUrl: "",
   });
+
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [newImage, setNewImage] = useState<ImagePicker.ImagePickerAsset | null>(
-    null
-  );
+
+  const [imageAsset, setImageAsset] =
+    useState<ImagePicker.ImagePickerAsset | null>(null);
+  const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
 
   const handleSelectImage = async () => {
     const permissionResult =
@@ -81,17 +90,14 @@ export function EventFormScreen({ route }: Props) {
       );
       return;
     }
-
     const pickerResult = await ImagePicker.launchImageLibraryAsync({
-      // verificar depois mediaTypes: [ImagePicker.MediaType.IMAGE] ,
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [16, 9],
       quality: 0.8,
     });
-
     if (!pickerResult.canceled) {
-      setNewImage(pickerResult.assets[0]);
+      setImageAsset(pickerResult.assets[0]);
     }
   };
 
@@ -110,102 +116,127 @@ export function EventFormScreen({ route }: Props) {
   };
 
   async function handleSaveEvent() {
-    setIsLoading(true);
-
-    const { date, ...textData } = formData;
-    const validation = createEventSchema.safeParse({
-      ...textData,
-      date: date.toISOString(),
+    setIsSubmitting(true);
+    const schema = isEditMode ? updateEventSchema : createEventSchema;
+    const validation = schema.safeParse({
+      ...formData,
+      date: formData.date.toISOString(),
     });
+
     if (!validation.success) {
       Toast.show({
         type: "error",
         text1: "Dados Inválidos",
         text2: validation.error.errors[0].message,
       });
-      setIsLoading(false);
+      setIsSubmitting(false);
       return;
     }
 
-    if (!isEditMode && !newImage) {
-      Toast.show({ type: "error", text1: "Imagem Obrigatória" });
-      setIsLoading(false);
+    if (!isEditMode && !imageAsset) {
+      Toast.show({
+        type: "error",
+        text1: "Imagem Obrigatória",
+        text2: "Por favor, selecione uma imagem de capa.",
+      });
+      setIsSubmitting(false);
       return;
     }
 
     try {
       const token = await getToken({ template: "api-testing-token" });
-      let finalImageUrl = formData.imageUrl;
+      let finalImageUrl = existingImageUrl;
 
-      if (newImage) {
-        // TODO: Lógica real de upload da 'newImage.uri' para o Supabase
-        console.log("Simulando upload de nova imagem...");
-        finalImageUrl = `https://picsum.photos/seed/${Date.now()}/400/300`;
+      if (imageAsset) {
+        const uploadedUrl = await uploadImage(imageAsset);
+        if (!uploadedUrl) {
+          Toast.show({
+            type: "error",
+            text1: "Erro no Upload",
+            text2: "Não foi possível carregar a imagem. Tente novamente.",
+          });
+          setIsSubmitting(false);
+          return;
+        }
+        finalImageUrl = uploadedUrl;
       }
 
       const dataPayload = { ...validation.data, imageUrl: finalImageUrl };
 
       if (isEditMode) {
-        // MODO EDIÇÃO: Usa a rota PUT
         await api.put(`/events/${eventId}`, dataPayload, {
           headers: { Authorization: `Bearer ${token}` },
         });
         Toast.show({
           type: "success",
           text1: "Sucesso!",
-          text2: "Evento atualizado.",
+          text2: "Evento atualizado com sucesso.",
         });
       } else {
-        // MODO CRIAÇÃO: Usa a rota POST
         await api.post("/events", dataPayload, {
           headers: { Authorization: `Bearer ${token}` },
         });
         Toast.show({
           type: "success",
           text1: "Sucesso!",
-          text2: "Evento criado.",
+          text2: "Evento criado com sucesso.",
         });
       }
-      // navigation.goBack();
-    } catch (error) {
-      console.error("Erro completo ao criar evento:", error);
+      navigation.goBack();
+    } catch (error: any) {
+      console.error("Erro completo ao salvar evento:", error);
+      const errorMessage =
+        error.response?.data?.message || "Não foi possível salvar o evento.";
       Toast.show({
         type: "error",
-        text1: "Erro ao Criar Evento",
-        text2: "Não foi possível salvar o evento. Tente novamente.",
+        text1: "Erro ao Salvar",
+        text2: errorMessage,
       });
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   }
 
   useEffect(() => {
-    if (isEditMode) {
-      setIsLoading(true);
+    if (isEditMode && eventId) {
       const fetchEventData = async () => {
+        setIsFetchingData(true);
         try {
           const response = await api.get(`/events/${eventId}`);
           const event = response.data.event;
+
           setFormData({
             title: event.title,
             location: event.location,
             description: event.description,
             date: new Date(event.date),
-            imageUrl: event.imageUrl,
           });
+
+          if (event.imageUrl) {
+            setExistingImageUrl(event.imageUrl);
+          }
         } catch (error) {
           Toast.show({
             type: "error",
-            text1: "Erro ao carregar dados do evento.",
+            text1: "Erro ao carregar dados",
+            text2: "Não foi possível encontrar os dados do evento.",
           });
-          // navigation.goBack();
+          navigation.goBack();
         } finally {
-          setIsLoading(false);
+          setIsFetchingData(false);
         }
       };
       fetchEventData();
     }
-  }, [eventId, isEditMode]);
+  }, [eventId, isEditMode, navigation]);
+
+  if (isFetchingData) {
+    return (
+      <SafeAreaView className="flex-1 justify-center items-center bg-white">
+        <ActivityIndicator size="large" color="#4b8c34" />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -238,15 +269,15 @@ export function EventFormScreen({ route }: Props) {
               onPress={handleSelectImage}
               className="w-full h-48 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 items-center justify-center mb-6"
             >
-              {newImage ? (
+              {imageAsset ? (
                 <Image
-                  source={{ uri: newImage.uri }}
+                  source={{ uri: imageAsset.uri }}
                   className="w-full h-full rounded-xl"
                   resizeMode="cover"
                 />
-              ) : formData.imageUrl ? (
+              ) : existingImageUrl ? (
                 <Image
-                  source={{ uri: formData.imageUrl }}
+                  source={{ uri: existingImageUrl }}
                   className="w-full h-full rounded-xl"
                   resizeMode="cover"
                 />
@@ -285,7 +316,9 @@ export function EventFormScreen({ route }: Props) {
               <FontAwesome name="calendar" size={20} color="#6B7280" />
               <Text className="text-lg text-gray-800 ml-3">
                 {formData.date.toLocaleDateString("pt-BR", {
-                  dateStyle: "long",
+                  day: "2-digit",
+                  month: "long",
+                  year: "numeric",
                 })}
               </Text>
             </TouchableOpacity>
@@ -296,6 +329,7 @@ export function EventFormScreen({ route }: Props) {
                 mode="date"
                 display="default"
                 onChange={onChangeDate}
+                minimumDate={new Date()} // Opcional: não permite datas passadas
               />
             )}
 
@@ -308,19 +342,19 @@ export function EventFormScreen({ route }: Props) {
               onChangeText={(text) => handleInputChange("description", text)}
               multiline
               numberOfLines={6}
-              className="w-full border border-gray-300 rounded-xl p-4 text-base h-36 bg-gray-100 align-top"
+              className="w-full border border-gray-300 rounded-xl p-4 text-base h-36 bg-gray-100"
               textAlignVertical="top"
             />
 
             <View className="mt-8 mb-4">
               <Button
-                title={isEditMode ? "Salvar Alterações" : "Salvar Evento"}
+                title={isEditMode ? "Salvar Alterações" : "Criar Evento"}
                 onPress={handleSaveEvent}
-                isLoading={isLoading}
+                isLoading={isUploading || isSubmitting} // Loading unificado
                 className="bg-green-logo py-4 rounded-xl items-center justify-center"
                 textClassName="text-white text-lg font-bold"
                 hasShadow
-                shadowColor="#2A9D8F"
+                shadowColor="#4b8c34"
               />
             </View>
           </View>

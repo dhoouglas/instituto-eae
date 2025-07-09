@@ -79,7 +79,7 @@ export function EventDetailsScreen({ route, navigation }: Props) {
   if (isLoading) {
     return (
       <SafeAreaView className="flex-1 justify-center items-center">
-        <ActivityIndicator size="large" color="#2A9D8F" />
+        <ActivityIndicator size="large" color="#4b8c34" />
       </SafeAreaView>
     );
   }
@@ -110,7 +110,7 @@ export function EventDetailsScreen({ route, navigation }: Props) {
 
           <View className="mt-4 space-y-3">
             <View className="flex-row items-center">
-              <FontAwesome name="calendar" size={20} color="#2A9D8F" />
+              <FontAwesome name="calendar" size={20} color="#4b8c34" />
               <Text className="text-lg text-gray-700 ml-3 font-[Inter_400Regular]">
                 {eventDate.toLocaleDateString("pt-BR", {
                   weekday: "long",
@@ -124,7 +124,7 @@ export function EventDetailsScreen({ route, navigation }: Props) {
               onPress={handleOpenMaps}
               className="flex-row items-center"
             >
-              <FontAwesome name="map-marker" size={24} color="#2A9D8F" />
+              <FontAwesome name="map-marker" size={24} color="#4b8c34" />
               <Text className="text-lg text-gray-700 ml-3 font-[Inter_400Regular] flex-1">
                 {event.location}
               </Text>

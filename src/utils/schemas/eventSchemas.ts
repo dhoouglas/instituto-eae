@@ -10,3 +10,5 @@ export const createEventSchema = z.object({
     .string()
     .min(10, { message: "A descrição precisa ter no mínimo 10 caracteres." }),
 });
+
+export const updateEventSchema = createEventSchema.partial();
