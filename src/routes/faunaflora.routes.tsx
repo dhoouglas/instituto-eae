@@ -1,31 +1,20 @@
+import React from "react";
 import { createStackNavigator } from "@react-navigation/stack";
-import { RootParamList } from "./types";
 
-// Importe as telas
-import { FaunaFloraListScreen } from "@/screens/FaunaFlora/List/index";
-import { CreateFaunaFloraScreen } from "@/screens/FaunaFlora/Create/index";
+import { FaunaFloraListScreen } from "@/screens/FaunaFlora/List";
+import { FaunaFloraFormScreen } from "@/screens/FaunaFlora/Form";
+import { FaunaFloraDetailsScreen } from "@/screens/FaunaFlora/Details";
+import { FaunaFloraStackParamList } from "./types";
 
-const Stack = createStackNavigator<RootParamList>();
+const { Navigator, Screen } = createStackNavigator<FaunaFloraStackParamList>();
 
-export function FaunaFloraStackNavigator() {
+export function FaunaFloraRoutes() {
   return (
-    <Stack.Navigator
-      screenOptions={{
-        headerStyle: { backgroundColor: "#2A9D8F" },
-        headerTintColor: "#fff",
-        headerTitleStyle: { fontFamily: "Inter_700Bold" },
-      }}
-    >
-      <Stack.Screen
-        name="faunaFloraList"
-        component={FaunaFloraListScreen}
-        options={{ title: "Catálogo de Espécies" }}
-      />
-      <Stack.Screen
-        name="createFaunaFlora"
-        component={CreateFaunaFloraScreen}
-        options={{ title: "Adicionar Espécie" }}
-      />
-    </Stack.Navigator>
+    <Navigator screenOptions={{ headerShown: false }}>
+      <Screen name="faunaFloraList" component={FaunaFloraListScreen} />
+      <Screen name="faunaFloraDetails" component={FaunaFloraDetailsScreen} />
+      <Screen name="createFaunaFlora" component={FaunaFloraFormScreen} />
+      <Screen name="editFaunaFlora" component={FaunaFloraFormScreen} />
+    </Navigator>
   );
 }

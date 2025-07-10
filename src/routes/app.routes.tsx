@@ -7,7 +7,7 @@ import { Home } from "@/screens/Home";
 import { Profile } from "@/screens/Profile";
 
 import { EventsStackNavigator } from "./events.route";
-import { FaunaFloraStackNavigator } from "./faunaflora.routes";
+import { FaunaFloraRoutes } from "./faunaflora.routes";
 import { useUser } from "@clerk/clerk-expo";
 import { NewsStackNavigator } from "./news.routes";
 
@@ -74,8 +74,8 @@ export function AppRoutes() {
         }}
       />
       <Tab.Screen
-        name="faunaeflora"
-        component={FaunaFloraStackNavigator}
+        name="faunaFlora"
+        component={FaunaFloraRoutes}
         options={{
           headerShown: false,
           tabBarLabel: "Fauna & Flora",

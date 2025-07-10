@@ -16,6 +16,13 @@ export type EventsStackParamList = {
   editEvent: { eventId: string };
 };
 
+export type FaunaFloraStackParamList = {
+  faunaFloraList: undefined;
+  createFaunaFlora: undefined;
+  faunaFloraDetails: { faunaFloraId: string; type: "FAUNA" | "FLORA" };
+  editFaunaFlora: { faunaFloraId: string; type: "FAUNA" | "FLORA" };
+};
+
 export type RootParamList = {
   // Telas de Autenticação
   welcome: undefined;
@@ -32,9 +39,7 @@ export type RootParamList = {
   events: NavigatorScreenParams<EventsStackParamList>;
 
   // Pilha de Fauna e Flora
-  faunaeflora: undefined;
-  faunaFloraList: undefined;
-  createFaunaFlora: undefined;
+  faunaFlora: NavigatorScreenParams<FaunaFloraStackParamList>;
 
   // Tela Profile
   profile: undefined;
@@ -51,3 +56,7 @@ export type NewsStackScreenProps<T extends keyof NewsStackParamList> =
 
 export type EventsStackScreenProps<T extends keyof EventsStackParamList> =
   StackScreenProps<EventsStackParamList, T>;
+
+export type FaunaFloraStackScreenProps<
+  T extends keyof FaunaFloraStackParamList,
+> = StackScreenProps<FaunaFloraStackParamList, T>;
