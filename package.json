@@ -11,6 +11,8 @@
   "dependencies": {
     "@clerk/clerk-expo": "^2.13.1",
     "@expo-google-fonts/inter": "^0.4.1",
+    "@hookform/resolvers": "^5.1.1",
+    "@react-native-async-storage/async-storage": "2.1.2",
     "@react-native-community/datetimepicker": "8.4.1",
     "@react-navigation/bottom-tabs": "^7.4.2",
     "@react-navigation/native": "^7.1.11",
@@ -29,9 +31,11 @@
     "prettier-plugin-tailwindcss": "^0.5.14",
     "react": "19.0.0",
     "react-dom": "19.0.0",
+    "react-hook-form": "^7.60.0",
     "react-native": "0.79.4",
     "react-native-gesture-handler": "~2.24.0",
     "react-native-keyboard-aware-scroll-view": "^0.9.5",
+    "react-native-pager-view": "^6.8.1",
     "react-native-reanimated": "~3.17.4",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.11.1",
@@ -39,8 +43,7 @@
     "react-native-svg-transformer": "^1.5.1",
     "react-native-toast-message": "^2.3.0",
     "react-native-url-polyfill": "^2.0.0",
-    "zod": "^3.25.67",
-    "@react-native-async-storage/async-storage": "2.1.2"
+    "zod": "^3.25.67"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
