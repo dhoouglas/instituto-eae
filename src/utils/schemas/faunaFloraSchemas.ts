@@ -1,14 +1,36 @@
-import z from "zod";
+import { z } from "zod";
 
-export const createFaunaFloraSchema = z.object({
-  popularName: z.string().min(3, { message: "O nome popular é obrigatório." }),
-  scientificName: z
-    .string()
-    .min(3, { message: "O nome científico é obrigatório." }),
-  type: z.enum(["fauna", "flora"], {
-    errorMap: () => ({ message: "Selecione se é fauna ou flora." }),
-  }),
-  description: z
-    .string()
-    .min(10, { message: "A descrição precisa ter no mínimo 10 caracteres." }),
+const baseSchema = z.object({
+  name: z.string().min(3, "O nome popular é obrigatório."),
+  scientificName: z.string().min(3, "O nome científico é obrigatório."),
+  description: z.string().min(10, "A descrição é obrigatória."),
 });
+
+const faunaSchema = baseSchema.extend({
+  type: z.literal("FAUNA"),
+  habitat: z.string().min(3, "O habitat é obrigatório."),
+  conservationStatus: z.enum(["POUCO_PREOCUPANTE", "AMEACADA", "EXTINTA"], {
+    errorMap: () => ({
+      message: "Selecione o estado de conservação.",
+    }),
+  }),
+});
+
+const floraSchema = baseSchema.extend({
+  type: z.literal("FLORA"),
+  family: z.string().min(3, "A família é obrigatória."),
+  conservationStatus: z
+    .enum([
+      "POUCO_PREOCUPANTE",
+      "AMEACADA",
+      "EXTINTA",
+      "NAO_APLICAVEL",
+      "Status de Conservação",
+    ])
+    .optional(),
+});
+
+export const faunaFloraSchema = z.discriminatedUnion("type", [
+  faunaSchema,
+  floraSchema,
+]);
