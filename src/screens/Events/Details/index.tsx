@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,13 +10,12 @@ import {
   Linking,
   Platform,
 } from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
+import { useAuth } from "@clerk/clerk-expo";
 import { EventsStackScreenProps } from "@/routes/types";
 import { FontAwesome } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
 import api from "@/lib/api";
 import { RSVPSelector, RSVPStatus } from "@/components/RSVPSelector";
-import { useAuth } from "@clerk/clerk-expo";
 
 type EventDetails = {
   id: string;
@@ -31,40 +30,50 @@ type Props = EventsStackScreenProps<"eventDetail">;
 
 export function EventDetailsScreen({ route, navigation }: Props) {
   const { eventId } = route.params;
-  const { getToken } = useAuth();
+  const { getToken, isLoaded } = useAuth();
 
   const [event, setEvent] = useState<EventDetails | null>(null);
   const [myStatus, setMyStatus] = useState<RSVPStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchEventDetails = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const token = await getToken();
-      if (!token) throw new Error("Usuário não autenticado");
-
-      const [eventResponse, attendanceResponse] = await Promise.all([
-        api.get(`/events/${eventId}`),
-        api.get(`/events/${eventId}/attendance/me`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-      ]);
-
-      setEvent(eventResponse.data.event);
-      setMyStatus(attendanceResponse.data.attendance?.status || null);
-    } catch (error) {
-      console.error("Erro ao buscar dados da tela de detalhes:", error);
-      Toast.show({ type: "error", text1: "Erro ao carregar o evento." });
-    } finally {
-      setIsLoading(false);
+  useEffect(() => {
+    if (!isLoaded) {
+      return; // Aguarda o Clerk terminar de carregar a sessão.
     }
-  }, [eventId]);
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchEventDetails();
-    }, [fetchEventDetails])
-  );
+    const fetchDetails = async () => {
+      setIsLoading(true);
+      try {
+        const token = await getToken();
+        if (!token) {
+          Toast.show({
+            type: "error",
+            text1: "Sessão expirada. Faça login novamente.",
+          });
+          setIsLoading(false);
+          return;
+        }
+
+        const config = { headers: { Authorization: `Bearer ${token}` } };
+
+        const [eventResponse, attendanceResponse] = await Promise.all([
+          api.get(`/events/${eventId}`, config),
+          api.get(`/events/${eventId}/attendance/me`, config),
+        ]);
+
+        setEvent(eventResponse.data.event);
+        setMyStatus(attendanceResponse.data.attendance?.status || null);
+      } catch (error) {
+        console.error("Erro ao buscar dados da tela de detalhes:", error);
+        Toast.show({ type: "error", text1: "Erro ao carregar o evento." });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDetails();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eventId, isLoaded]);
 
   const handleOpenMaps = () => {
     const url = Platform.select({

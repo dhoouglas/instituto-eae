@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
-import { useAuth } from "@clerk/clerk-expo";
 import Toast from "react-native-toast-message";
+import { useAuth } from "@clerk/clerk-expo";
 import api from "@/lib/api";
 
 export type RSVPStatus = "CONFIRMED" | "MAYBE" | "DECLINED";
@@ -24,13 +24,20 @@ export function RSVPSelector({ eventId, initialStatus }: Props) {
     async (status: RSVPStatus) => {
       setIsLoading(true);
       try {
-        const token = await getToken({ template: "api-testing-token" });
+        const token = await getToken();
+        if (!token) {
+          Toast.show({
+            type: "error",
+            text1: "Sessão expirada. Faça login novamente.",
+          });
+          return;
+        }
 
-        await api.post(
-          `/events/${eventId}/rsvp`,
-          { status },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        const config = {
+          headers: { Authorization: `Bearer ${token}` },
+        };
+
+        await api.post(`/events/${eventId}/rsvp`, { status }, config);
 
         setSelection(status);
         Toast.show({ type: "success", text1: "Sua presença foi atualizada!" });
