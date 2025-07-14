@@ -17,7 +17,7 @@ export type EventsStackParamList = {
 };
 
 export type FaunaFloraStackParamList = {
-  faunaFloraList: undefined;
+  faunaFloraList: { type?: "FAUNA" | "FLORA" } | undefined;
   createFaunaFlora: undefined;
   faunaFloraDetails: { faunaFloraId: string; type: "FAUNA" | "FLORA" };
   editFaunaFlora: { faunaFloraId: string; type: "FAUNA" | "FLORA" };

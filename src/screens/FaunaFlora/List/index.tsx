@@ -11,7 +11,12 @@ import {
   Platform,
   StatusBar,
 } from "react-native";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import {
+  useFocusEffect,
+  useNavigation,
+  useRoute,
+  RouteProp,
+} from "@react-navigation/native";
 import { useUser, useAuth } from "@clerk/clerk-expo";
 import { FontAwesome } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
@@ -31,6 +36,11 @@ type FaunaFloraPost = {
 };
 
 type FaunaFloraNavigationProp = StackNavigationProp<
+  FaunaFloraStackParamList,
+  "faunaFloraList"
+>;
+
+type FaunaFloraListRouteProp = RouteProp<
   FaunaFloraStackParamList,
   "faunaFloraList"
 >;
@@ -149,6 +159,7 @@ const FaunaFloraCard = ({
 
 export function FaunaFloraListScreen() {
   const navigation = useNavigation<FaunaFloraNavigationProp>();
+  const route = useRoute<FaunaFloraListRouteProp>();
   const { user } = useUser();
   const { getToken } = useAuth();
   const isAdmin = user?.publicMetadata?.role === "admin";
@@ -156,7 +167,7 @@ export function FaunaFloraListScreen() {
   const [items, setItems] = useState<FaunaFloraPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<FilterType>("ALL");
+  const [filter, setFilter] = useState<FilterType>(route.params?.type || "ALL");
 
   const fetchItems = useCallback(async () => {
     setIsLoading(true);
