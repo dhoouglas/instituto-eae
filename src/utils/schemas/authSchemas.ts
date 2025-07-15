@@ -36,3 +36,38 @@ export const forgotPasswordResetSchema = z.object({
     .string()
     .min(8, { message: "A nova senha precisa ter no mínimo 8 caracteres." }),
 });
+
+// Esquema para criar uma nova senha (usuários de contas sociais)
+export const createPasswordSchema = z
+  .object({
+    newPassword: z
+      .string()
+      .min(8, { message: "A senha deve ter no mínimo 8 caracteres." }),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "As senhas não coincidem.",
+    path: ["confirmPassword"],
+  });
+
+// Esquema para atualizar o perfil do usuário
+export const updateUserSchema = z.object({
+  firstName: z.string().min(1, { message: "O nome é obrigatório." }),
+  lastName: z.string().min(1, { message: "O sobrenome é obrigatório." }),
+});
+
+// Esquema para alterar a senha existente
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z
+      .string()
+      .min(1, { message: "Por favor, insira sua senha atual." }),
+    newPassword: z
+      .string()
+      .min(8, { message: "A nova senha deve ter no mínimo 8 caracteres." }),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "As senhas não coincidem.",
+    path: ["confirmPassword"],
+  });

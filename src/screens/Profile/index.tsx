@@ -7,44 +7,56 @@ import {
   Image,
   ScrollView,
   Alert,
+  ImageBackground,
 } from "react-native";
 import { useAuth, useUser } from "@clerk/clerk-expo";
-import { FontAwesome } from "@expo/vector-icons";
-import { AppTabScreenProps } from "@/routes/types";
+import { FontAwesome, Feather } from "@expo/vector-icons";
+import { ProfileStackScreenProps, RootParamList } from "@/routes/types";
 import Toast from "react-native-toast-message";
-
 import { Clipboard } from "react-native";
-import { Button } from "@/components/Button";
+import { Loading } from "@/components/Loading";
 
 const ProfileMenuItem = ({
   icon,
   text,
   onPress,
+  isLogout = false,
 }: {
   icon: any;
   text: string;
   onPress?: () => void;
+  isLogout?: boolean;
 }) => (
   <TouchableOpacity
     onPress={onPress}
-    className="flex-row items-center p-4 bg-gray-50 rounded-lg mb-3"
+    className={`flex-row items-center p-4 rounded-lg mb-3 ${
+      isLogout ? "bg-red-50" : "bg-gray-50"
+    }`}
     activeOpacity={0.7}
   >
-    <FontAwesome name={icon} size={20} color="#555" />
-    <Text className="text-lg text-gray-700 ml-4 font-[Inter_400Regular]">
+    {icon}
+    <Text
+      className={`text-lg ml-4 font-[Inter_500Medium] ${
+        isLogout ? "text-red-600" : "text-gray-700"
+      }`}
+    >
       {text}
     </Text>
-    <FontAwesome
-      name="chevron-right"
-      size={16}
-      color="#A1A1AA"
-      className="ml-auto"
-    />
+    {!isLogout && (
+      <FontAwesome
+        name="chevron-right"
+        size={16}
+        color="#A1A1AA"
+        className="ml-auto"
+      />
+    )}
   </TouchableOpacity>
 );
 
-export function Profile({ navigation }: AppTabScreenProps<"profile">) {
-  const { user } = useUser();
+export function Profile({
+  navigation,
+}: ProfileStackScreenProps<"profileMain">) {
+  const { user, isLoaded } = useUser();
   const { signOut, getToken } = useAuth();
 
   const isAdmin = user?.publicMetadata?.role === "admin";
@@ -60,10 +72,7 @@ export function Profile({ navigation }: AppTabScreenProps<"profile">) {
 
   const handleSignOut = async () => {
     try {
-      console.log("Tentando encerrar a sessão...");
-
       await signOut();
-
       Toast.show({
         type: "info",
         text1: "Você saiu.",
@@ -80,7 +89,6 @@ export function Profile({ navigation }: AppTabScreenProps<"profile">) {
 
   const handleCopyToken = async () => {
     try {
-      // getToken() é a função do Clerk que retorna o JWT da sessão ativa
       const token = await getToken({ template: "api-testing-token" });
       if (token) {
         Clipboard.setString(token);
@@ -92,72 +100,126 @@ export function Profile({ navigation }: AppTabScreenProps<"profile">) {
       }
     } catch (error) {
       console.error("Erro ao copiar token:", error);
+      Toast.show({
+        type: "error",
+        text1: "Erro ao Copiar",
+        text2: "Não foi possível obter o token de sessão.",
+      });
     }
   };
 
+  if (!isLoaded) {
+    return <Loading />;
+  }
+
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView className="flex-1 bg-gray-100">
       <ScrollView>
-        <View className="p-6 m-10">
-          <View className="items-center mb-10">
-            <TouchableOpacity className="mb-4">
-              {user?.hasImage ? (
-                <Image
-                  source={{ uri: user.imageUrl }}
-                  className="w-24 h-24 rounded-full"
-                />
-              ) : (
-                <View className="w-24 h-24 rounded-full bg-green-logo items-center justify-center">
-                  <Text className="text-white text-4xl font-bold">
-                    {getInitials()}
-                  </Text>
-                </View>
-              )}
-            </TouchableOpacity>
-            <Text className="text-3xl font-bold text-gray-800 font-[Inter_700Bold]">
-              {user?.fullName}
-            </Text>
-            <Text className="text-lg text-gray-500 mt-1">
-              {user?.primaryEmailAddress?.emailAddress}
-            </Text>
-          </View>
-
-          <View>
-            <ProfileMenuItem icon="user-circle" text="Editar Perfil" />
-            <ProfileMenuItem icon="shield" text="Segurança e Senha" />
-            <ProfileMenuItem icon="bell" text="Notificações" />
-
-            {isAdmin && (
-              <View className="mt-6">
-                <Text className="text-sm font-bold text-gray-400 uppercase mb-2 px-2">
-                  Administração
+        {/* Profile Header */}
+        <ImageBackground
+          source={require("@/assets/bg.png")}
+          className="pt-20 pb-4 px-6 items-center"
+        >
+          <TouchableOpacity className="mb-4 border-4 border-white rounded-full shadow-lg">
+            {user?.hasImage ? (
+              <Image
+                source={{ uri: user.imageUrl }}
+                className="w-28 h-28 rounded-full"
+              />
+            ) : (
+              <View className="w-28 h-28 rounded-full bg-green-logo items-center justify-center">
+                <Text className="text-white text-4xl font-bold">
+                  {getInitials()}
                 </Text>
-                <ProfileMenuItem icon="cogs" text="Painel do Administrador" />
               </View>
             )}
+          </TouchableOpacity>
+          <Text className="text-3xl font-bold text-gray-700 font-[Inter_700Bold] shadow-sm">
+            {user?.fullName}
+          </Text>
+          {user?.username && (
+            <Text className="text-xl font-semibold text-gray-500">
+              @{user?.username}
+            </Text>
+          )}
+          <Text className="text-lg text-gray-500 mt-1 font-[Inter_400Regular]">
+            {user?.primaryEmailAddress?.emailAddress}
+          </Text>
+        </ImageBackground>
+
+        <View className="p-6">
+          {/* Account Settings Section */}
+          <View className="mb-8">
+            <Text className="text-sm font-bold text-gray-500 uppercase mb-3 px-2">
+              Configurações da Conta
+            </Text>
+            <View className="bg-white rounded-xl p-2 shadow-sm">
+              <ProfileMenuItem
+                icon={<Feather name="user" size={20} color="#555" />}
+                text="Editar Perfil"
+                onPress={() => navigation.navigate("editProfile")}
+              />
+              <ProfileMenuItem
+                icon={<Feather name="shield" size={20} color="#555" />}
+                text="Segurança e Senha"
+                onPress={() => navigation.navigate("security")}
+              />
+              <ProfileMenuItem
+                icon={<Feather name="bell" size={20} color="#555" />}
+                text="Notificações"
+                onPress={() => navigation.navigate("notifications")}
+              />
+            </View>
           </View>
 
-          {/* 3. Adicionado este botão temporário para teste */}
-          <View className="mt-6 border-t border-gray-200 pt-6">
-            <Button
-              title="Copiar Token de Teste (Admin)"
-              onPress={handleCopyToken}
-              className="bg-blue-500 py-4 rounded-xl"
-              textClassName="text-white font-bold"
+          {/* Developer Tools Section */}
+          {isAdmin && (
+            <View className="mb-8">
+              <Text className="text-sm font-bold text-gray-500 uppercase mb-3 px-2">
+                Ferramentas de Desenvolvedor
+              </Text>
+              <View className="bg-white rounded-xl p-2 shadow-sm">
+                <ProfileMenuItem
+                  icon={<FontAwesome name="dashboard" size={20} color="#555" />}
+                  text="Painel do Administrador"
+                  onPress={() => navigation.navigate("admin")}
+                />
+                <ProfileMenuItem
+                  icon={<Feather name="copy" size={20} color="#555" />}
+                  text="Copiar Token de Teste"
+                  onPress={handleCopyToken}
+                />
+              </View>
+            </View>
+          )}
+
+          {/* Logout Section */}
+          <View className="mt-4">
+            <ProfileMenuItem
+              icon={<Feather name="log-out" size={20} color="#EF4444" />}
+              text="Sair (Logout)"
+              onPress={handleSignOut}
+              isLogout
             />
           </View>
 
-          <View className="mt-10">
-            <TouchableOpacity
-              onPress={handleSignOut}
-              className="flex-row items-center justify-center p-4 bg-red-50 rounded-lg"
-              activeOpacity={0.7}
-            >
-              <FontAwesome name="sign-out" size={22} color="#EF4444" />
-              <Text className="text-lg text-red-500 font-bold ml-3">
-                Sair (Logout)
-              </Text>
-            </TouchableOpacity>
+          {/* About Section */}
+          <View className="mt-8">
+            <Text className="text-sm font-bold text-gray-500 uppercase mb-3 px-2">
+              Sobre
+            </Text>
+            <View className="bg-white rounded-xl p-2 shadow-sm">
+              <ProfileMenuItem
+                icon={<Feather name="info" size={20} color="#555" />}
+                text="Versão e Créditos"
+                onPress={() =>
+                  Alert.alert(
+                    "Informações do App",
+                    "Versão: 1.0.0\nDesenvolvido por: DGM33"
+                  )
+                }
+              />
+            </View>
           </View>
         </View>
       </ScrollView>
