@@ -4,7 +4,7 @@ import { FontAwesome } from "@expo/vector-icons";
 import { RootParamList } from "./types";
 
 import { Home } from "@/screens/Home";
-import { Profile } from "@/screens/Profile";
+import { ProfileRoutes } from "./profile.routes";
 
 import { EventsStackNavigator } from "./events.route";
 import { FaunaFloraRoutes } from "./faunaflora.routes";
@@ -48,19 +48,20 @@ export function AppRoutes() {
         }}
       />
 
-      {isAdmin && (
-        <Tab.Screen
-          name="news"
-          component={NewsStackNavigator}
-          options={{
-            headerShown: false,
-            tabBarLabel: "Notícias",
-            tabBarIcon: ({ color, size }) => (
-              <FontAwesome name="newspaper-o" color={color} size={size} />
-            ),
-          }}
-        />
-      )}
+      <Tab.Screen
+        name="news"
+        component={NewsStackNavigator}
+        options={{
+          headerShown: false,
+          tabBarLabel: "Notícias",
+          tabBarIcon: ({ color, size }) => (
+            <FontAwesome name="newspaper-o" color={color} size={size} />
+          ),
+          tabBarItemStyle: {
+            display: isAdmin ? "flex" : "none",
+          },
+        }}
+      />
 
       <Tab.Screen
         name="events"
@@ -87,7 +88,7 @@ export function AppRoutes() {
 
       <Tab.Screen
         name="profile"
-        component={Profile}
+        component={ProfileRoutes}
         options={{
           headerShown: false,
           tabBarLabel: "Perfil",

@@ -1,5 +1,8 @@
 import { NavigatorScreenParams } from "@react-navigation/native";
-import { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
+import {
+  BottomTabScreenProps,
+  BottomTabNavigationProp,
+} from "@react-navigation/bottom-tabs";
 import { StackScreenProps } from "@react-navigation/stack";
 
 export type NewsStackParamList = {
@@ -23,6 +26,19 @@ export type FaunaFloraStackParamList = {
   editFaunaFlora: { faunaFloraId: string; type: "FAUNA" | "FLORA" };
 };
 
+export type ProfileStackParamList = {
+  profileMain: undefined;
+  editProfile: undefined;
+  security: undefined;
+  notifications: undefined;
+  admin: undefined;
+};
+
+export type AdminStackParamList = {
+  adminDashboard: undefined;
+  // Adicionar outras telas de admin aqui no futuro
+};
+
 export type RootParamList = {
   // Telas de Autenticação
   welcome: undefined;
@@ -42,14 +58,22 @@ export type RootParamList = {
   faunaFlora: NavigatorScreenParams<FaunaFloraStackParamList>;
 
   // Tela Profile
-  profile: undefined;
+  profile: NavigatorScreenParams<ProfileStackParamList>;
 };
+
+export type AppNavigatorRoutesProps = BottomTabNavigationProp<RootParamList>;
 
 export type AppTabScreenProps<T extends keyof RootParamList> =
   BottomTabScreenProps<RootParamList, T>;
 
 export type AppStackScreenProps<T extends keyof RootParamList> =
   StackScreenProps<RootParamList, T>;
+
+export type ProfileStackScreenProps<T extends keyof ProfileStackParamList> =
+  StackScreenProps<ProfileStackParamList, T>;
+
+export type AdminStackScreenProps<T extends keyof AdminStackParamList> =
+  StackScreenProps<AdminStackParamList, T>;
 
 export type NewsStackScreenProps<T extends keyof NewsStackParamList> =
   StackScreenProps<NewsStackParamList, T>;
