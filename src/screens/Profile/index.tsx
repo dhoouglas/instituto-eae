@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -8,9 +8,12 @@ import {
   ScrollView,
   Alert,
   ImageBackground,
+  ActivityIndicator,
 } from "react-native";
 import { useAuth, useUser } from "@clerk/clerk-expo";
 import { FontAwesome, Feather } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from "expo-file-system";
 import { ProfileStackScreenProps, RootParamList } from "@/routes/types";
 import Toast from "react-native-toast-message";
 import { Clipboard } from "react-native";
@@ -58,6 +61,7 @@ export function Profile({
 }: ProfileStackScreenProps<"profileMain">) {
   const { user, isLoaded } = useUser();
   const { signOut, getToken } = useAuth();
+  const [isUploading, setIsUploading] = useState(false);
 
   const isAdmin = user?.publicMetadata?.role === "admin";
 
@@ -108,6 +112,59 @@ export function Profile({
     }
   };
 
+  const handleSelectAvatar = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        "Permissão necessária",
+        "Precisamos de permissão para acessar sua galeria para alterar o avatar."
+      );
+      return;
+    }
+
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      setIsUploading(true);
+      const selectedImage = result.assets[0];
+
+      try {
+        const base64 = await FileSystem.readAsStringAsync(selectedImage.uri, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        const dataUri = `data:image/jpeg;base64,${base64}`;
+
+        const updatedUser = await user?.setProfileImage({
+          file: dataUri,
+        });
+
+        if (updatedUser) {
+          Toast.show({
+            type: "success",
+            text1: "Avatar atualizado!",
+            text2: "Sua nova imagem de perfil foi salva.",
+          });
+        } else {
+          throw new Error("A atualização do perfil não retornou um usuário.");
+        }
+      } catch (error) {
+        console.error("Erro ao atualizar o avatar:", error);
+        Toast.show({
+          type: "error",
+          text1: "Erro ao atualizar",
+          text2: "Não foi possível alterar sua imagem de perfil.",
+        });
+      } finally {
+        setIsUploading(false);
+      }
+    }
+  };
+
   if (!isLoaded) {
     return <Loading />;
   }
@@ -120,7 +177,11 @@ export function Profile({
           source={require("@/assets/bg.png")}
           className="pt-20 pb-4 px-6 items-center"
         >
-          <TouchableOpacity className="mb-4 border-4 border-white rounded-full shadow-lg">
+          <TouchableOpacity
+            onPress={handleSelectAvatar}
+            disabled={isUploading}
+            className="mb-4 border-4 border-white rounded-full shadow-lg"
+          >
             {user?.hasImage ? (
               <Image
                 source={{ uri: user.imageUrl }}
@@ -131,6 +192,11 @@ export function Profile({
                 <Text className="text-white text-4xl font-bold">
                   {getInitials()}
                 </Text>
+              </View>
+            )}
+            {isUploading && (
+              <View className="absolute inset-0 bg-black/50 rounded-full items-center justify-center">
+                <ActivityIndicator size="large" color="#FFFFFF" />
               </View>
             )}
           </TouchableOpacity>

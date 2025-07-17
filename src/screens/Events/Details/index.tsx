@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Linking,
   Platform,
+  StatusBar,
 } from "react-native";
 import { useAuth } from "@clerk/clerk-expo";
 import { EventsStackScreenProps } from "@/routes/types";
@@ -105,54 +106,69 @@ export function EventDetailsScreen({ route, navigation }: Props) {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <ScrollView>
-        <Image
-          source={{ uri: event.imageUrl }}
-          className="w-full h-64"
-          resizeMode="cover"
-        />
+      <View
+        style={{
+          flex: 1,
+        }}
+      >
+        <ScrollView>
+          <Image
+            source={{ uri: event.imageUrl }}
+            className="w-full h-64"
+            resizeMode="cover"
+          />
 
-        <View className="p-6">
-          <Text className="text-4xl font-bold text-gray-900 font-[Inter_700Bold] leading-tight">
-            {event.title}
-          </Text>
+          <View className="p-6">
+            <Text className="text-4xl font-bold text-gray-900 font-[Inter_700Bold] leading-tight">
+              {event.title}
+            </Text>
 
-          <View className="mt-4 space-y-3">
-            <View className="flex-row items-center">
-              <FontAwesome name="calendar" size={20} color="#4b8c34" />
-              <Text className="text-lg text-gray-700 ml-3 font-[Inter_400Regular]">
-                {eventDate.toLocaleDateString("pt-BR", {
-                  weekday: "long",
-                  day: "2-digit",
-                  month: "long",
-                  year: "numeric",
-                })}
-              </Text>
+            <View className="mt-4 space-y-3">
+              <View className="flex-row items-center">
+                <FontAwesome name="calendar" size={20} color="#4b8c34" />
+                <Text className="text-lg text-gray-700 ml-3 font-[Inter_400Regular]">
+                  {eventDate.toLocaleDateString("pt-BR", {
+                    weekday: "long",
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={handleOpenMaps}
+                className="flex-row items-center"
+              >
+                <FontAwesome name="map-marker" size={24} color="#4b8c34" />
+                <Text className="text-lg text-gray-700 ml-3 font-[Inter_400Regular] flex-1">
+                  {event.location}
+                </Text>
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity
-              onPress={handleOpenMaps}
-              className="flex-row items-center"
-            >
-              <FontAwesome name="map-marker" size={24} color="#4b8c34" />
-              <Text className="text-lg text-gray-700 ml-3 font-[Inter_400Regular] flex-1">
-                {event.location}
-              </Text>
-            </TouchableOpacity>
+
+            <View className="w-full h-px bg-gray-200 my-6" />
+
+            <Text className="text-2xl font-bold text-gray-900 font-[Inter_700Bold] mb-2">
+              Sobre o Evento
+            </Text>
+            <Text className="text-lg text-gray-600 leading-relaxed font-[Inter_400Regular]">
+              {event.description}
+            </Text>
+
+            <View className="w-full h-px bg-gray-200 my-6" />
+            <RSVPSelector eventId={event.id} initialStatus={myStatus} />
           </View>
-
-          <View className="w-full h-px bg-gray-200 my-6" />
-
-          <Text className="text-2xl font-bold text-gray-900 font-[Inter_700Bold] mb-2">
-            Sobre o Evento
-          </Text>
-          <Text className="text-lg text-gray-600 leading-relaxed font-[Inter_400Regular]">
-            {event.description}
-          </Text>
-
-          <View className="w-full h-px bg-gray-200 my-6" />
-          <RSVPSelector eventId={event.id} initialStatus={myStatus} />
-        </View>
-      </ScrollView>
+        </ScrollView>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          className="absolute top-4 left-4 bg-black/20 w-10 h-10 rounded-full items-center justify-center"
+          style={{
+            marginTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+          }}
+        >
+          <FontAwesome name="arrow-left" size={20} color="white" />
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }
