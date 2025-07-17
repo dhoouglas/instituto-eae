@@ -1,17 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   SafeAreaView,
   ScrollView,
-  TouchableOpacity,
   Switch,
   Platform,
   StatusBar,
 } from "react-native";
+import { useAuth } from "@clerk/clerk-expo";
 import { ProfileStackScreenProps } from "@/routes/types";
-import { Feather } from "@expo/vector-icons";
 import { Header } from "@/components/Header";
+import api from "@/lib/api";
+import Toast from "react-native-toast-message";
 
 const NotificationToggle = ({
   label,
@@ -37,9 +38,89 @@ const NotificationToggle = ({
 export function Notifications({
   navigation,
 }: ProfileStackScreenProps<"notifications">) {
-  const [newEvents, setNewEvents] = useState(true);
-  const [eventReminders, setEventReminders] = useState(true);
-  const [appUpdates, setAppUpdates] = useState(false);
+  const { getToken } = useAuth();
+  const [preferences, setPreferences] = useState({
+    newEvents: true,
+    eventReminders: true,
+    appUpdates: false,
+  });
+
+  useEffect(() => {
+    const fetchPreferences = async () => {
+      try {
+        const token = await getToken({ template: "api-testing-token" });
+        const url = "/notifications/users/notification-preferences";
+
+        const response = await api.get(url, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const { notifyOnNewEvents, notifyOnEventReminders, notifyOnNews } =
+          response.data;
+
+        setPreferences({
+          newEvents: notifyOnNewEvents,
+          eventReminders: notifyOnEventReminders,
+          appUpdates: notifyOnNews,
+        });
+      } catch (error) {
+        console.error("Failed to fetch notification preferences:", error);
+        Toast.show({
+          type: "error",
+          text1: "Erro",
+          text2: "Não foi possível carregar suas preferências de notificação.",
+        });
+      }
+    };
+
+    fetchPreferences();
+  }, []);
+
+  const handleToggle = async (
+    key: keyof typeof preferences,
+    value: boolean
+  ) => {
+    const newPreferences = { ...preferences, [key]: value };
+    setPreferences(newPreferences);
+
+    const keyMapping: { [key: string]: string } = {
+      newEvents: "notifyOnNewEvents",
+      eventReminders: "notifyOnEventReminders",
+      appUpdates: "notifyOnNews",
+    };
+
+    try {
+      const token = await getToken({ template: "api-testing-token" });
+      const apiKey = keyMapping[key as keyof typeof keyMapping];
+
+      await api.put(
+        "/notifications/users/notification-preferences",
+        {
+          [apiKey]: value,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      Toast.show({
+        type: "success",
+        text1: "Preferência atualizada!",
+      });
+    } catch (error) {
+      console.error("Failed to update notification preference:", error);
+      // Revert state if API call fails
+      setPreferences(preferences);
+      Toast.show({
+        type: "error",
+        text1: "Erro",
+        text2: "Não foi possível atualizar sua preferência.",
+      });
+    }
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-gray-100">
@@ -56,18 +137,18 @@ export function Notifications({
           <View className="bg-white rounded-xl shadow-sm overflow-hidden">
             <NotificationToggle
               label="Novos eventos na minha área"
-              value={newEvents}
-              onValueChange={setNewEvents}
+              value={preferences.newEvents}
+              onValueChange={(value) => handleToggle("newEvents", value)}
             />
             <NotificationToggle
               label="Lembretes de eventos que confirmei presença"
-              value={eventReminders}
-              onValueChange={setEventReminders}
+              value={preferences.eventReminders}
+              onValueChange={(value) => handleToggle("eventReminders", value)}
             />
             <NotificationToggle
               label="Novidades e atualizações do Instituto EAE"
-              value={appUpdates}
-              onValueChange={setAppUpdates}
+              value={preferences.appUpdates}
+              onValueChange={(value) => handleToggle("appUpdates", value)}
             />
           </View>
         </View>

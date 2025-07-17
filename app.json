@@ -34,6 +34,10 @@
       "edgeToEdgeEnabled": true,
       "package": "com.dhoouglas.appeae"
     },
+    "notification": {
+      "icon": "./assets/icon.png",
+      "color": "#ffffff"
+    },
     "web": {
       "favicon": "./assets/favicon.png"
     },
@@ -42,9 +46,6 @@
         "projectId": "8d1cd463-5729-400c-8641-79cd892344f0"
       }
     },
-    "plugins": [
-      "expo-font",
-      "expo-web-browser"
-    ]
+    "plugins": ["expo-font", "expo-web-browser", "expo-notifications"]
   }
 }
