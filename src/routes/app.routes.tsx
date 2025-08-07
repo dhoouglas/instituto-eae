@@ -1,5 +1,6 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { FontAwesome } from "@expo/vector-icons";
+import { MaterialIcons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { RootParamList } from "./types";
 
@@ -10,12 +11,14 @@ import { EventsStackNavigator } from "./events.route";
 import { FaunaFloraRoutes } from "./faunaflora.routes";
 import { useUser } from "@clerk/clerk-expo";
 import { NewsStackNavigator } from "./news.routes";
+import { TrailRoutes } from "./trails.routes";
 
 const Tab = createBottomTabNavigator<RootParamList>();
 
 export function AppRoutes() {
   const { user } = useUser();
   const isAdmin = user?.publicMetadata?.role === "admin";
+  const insets = useSafeAreaInsets();
 
   return (
     <Tab.Navigator
@@ -23,15 +26,15 @@ export function AppRoutes() {
         tabBarActiveTintColor: "#488A35",
         tabBarInactiveTintColor: "#54341c",
         tabBarStyle: {
-          height: 80,
-          paddingTop: 8,
-          paddingBottom: 8,
+          height: 70,
+          paddingTop: 5,
+          paddingBottom: insets.bottom + 5,
           borderTopWidth: 0,
           backgroundColor: "#FFFFFF",
           elevation: 10,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: 11,
           fontFamily: "Inter_400Regular",
         },
       }}
@@ -42,8 +45,8 @@ export function AppRoutes() {
         options={{
           headerShown: false,
           tabBarLabel: "Início",
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="home" color={color} size={size} />
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="home" color={color} size={24} />
           ),
         }}
       />
@@ -54,8 +57,8 @@ export function AppRoutes() {
         options={{
           headerShown: false,
           tabBarLabel: "Notícias",
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="newspaper-o" color={color} size={size} />
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="article" color={color} size={24} />
           ),
           tabBarItemStyle: {
             display: isAdmin ? "flex" : "none",
@@ -69,8 +72,8 @@ export function AppRoutes() {
         options={{
           headerShown: false,
           tabBarLabel: "Eventos",
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="calendar" color={color} size={size} />
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="event" color={color} size={24} />
           ),
         }}
       />
@@ -79,9 +82,21 @@ export function AppRoutes() {
         component={FaunaFloraRoutes}
         options={{
           headerShown: false,
-          tabBarLabel: "Fauna & Flora",
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="leaf" color={color} size={size} />
+          tabBarLabel: "Biodiv.",
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="eco" color={color} size={24} />
+          ),
+        }}
+      />
+
+      <Tab.Screen
+        name="trails"
+        component={TrailRoutes}
+        options={{
+          headerShown: false,
+          tabBarLabel: "Trilhas",
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="hiking" color={color} size={24} />
           ),
         }}
       />
@@ -92,8 +107,8 @@ export function AppRoutes() {
         options={{
           headerShown: false,
           tabBarLabel: "Perfil",
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="user" color={color} size={size} />
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="person" color={color} size={24} />
           ),
         }}
       />

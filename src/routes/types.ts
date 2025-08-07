@@ -26,6 +26,20 @@ export type FaunaFloraStackParamList = {
   editFaunaFlora: { faunaFloraId: string; type: "FAUNA" | "FLORA" };
 };
 
+export type TrailStackParamList = {
+  TrailList: undefined;
+  RecordTrail: { trailId?: string };
+  DraftList: undefined;
+  TrailDetails: { trailId: string };
+  FollowTrail: { trailId: string };
+  TrailForm: {
+    trailId?: string;
+    coordinates?: { latitude: number; longitude: number }[];
+    waypointOrders?: number[];
+    duration?: number;
+  };
+};
+
 export type ProfileStackParamList = {
   profileMain: undefined;
   editProfile: undefined;
@@ -57,6 +71,9 @@ export type RootParamList = {
   // Pilha de Fauna e Flora
   faunaFlora: NavigatorScreenParams<FaunaFloraStackParamList>;
 
+  // Pilha de Trilhas
+  trails: NavigatorScreenParams<TrailStackParamList>;
+
   // Tela Profile
   profile: NavigatorScreenParams<ProfileStackParamList>;
 };
@@ -84,3 +101,6 @@ export type EventsStackScreenProps<T extends keyof EventsStackParamList> =
 export type FaunaFloraStackScreenProps<
   T extends keyof FaunaFloraStackParamList,
 > = StackScreenProps<FaunaFloraStackParamList, T>;
+
+export type TrailStackScreenProps<T extends keyof TrailStackParamList> =
+  StackScreenProps<TrailStackParamList, T>;

@@ -85,15 +85,45 @@ const QuickAccessCard = ({
 }) => (
   <TouchableOpacity
     onPress={onPress}
-    className="flex-1 aspect-square bg-white rounded-2xl items-center justify-center p-2 shadow-sm border border-gray-100"
+    className="flex-1 aspect-[4/3] bg-white rounded-2xl items-center justify-center p-3 shadow-md border border-gray-100"
     activeOpacity={0.7}
   >
-    <View className="bg-green-100 p-4 rounded-full">
-      <FontAwesome name={icon} size={28} color="#4b8c34" />
+    <View className="bg-green-100 p-4 rounded-full mb-2">
+      <FontAwesome name={icon} size={24} color="#3a7525" />
     </View>
-    <Text className="text-center text-gray-700 font-[Inter_600SemiBold] mt-3 text-sm">
+    <Text className="text-center text-gray-800 font-[Inter_600SemiBold] text-sm leading-tight">
       {title}
     </Text>
+  </TouchableOpacity>
+);
+
+const TrailHighlightCard = ({ onPress }: { onPress: () => void }) => (
+  <TouchableOpacity onPress={onPress} activeOpacity={0.9} className="mx-4">
+    <ImageBackground
+      source={{
+        uri: "https://images.pexels.com/photos/1194235/pexels-photo-1194235.jpeg",
+      }}
+      className="h-48 w-full rounded-2xl overflow-hidden justify-between p-5"
+      resizeMode="cover"
+    >
+      <View className="absolute top-0 left-0 right-0 bottom-0 bg-black/30" />
+      <View>
+        <Text className="text-white text-3xl font-[Inter_800ExtraBold] leading-tight">
+          Explore Nossas Trilhas
+        </Text>
+        <Text className="text-white/90 text-base font-[Inter_400Regular] mt-1">
+          Caminhe, descubra e conecte-se.
+        </Text>
+      </View>
+      <View className="self-start">
+        <View className="bg-green-500 rounded-full flex-row items-center px-4 py-2">
+          <Text className="text-white font-[Inter_600SemiBold] text-base mr-2">
+            Ver Trilhas
+          </Text>
+          <FontAwesome name="arrow-right" size={14} color="white" />
+        </View>
+      </View>
+    </ImageBackground>
   </TouchableOpacity>
 );
 
@@ -190,7 +220,9 @@ export function Home({ navigation }: AppTabScreenProps<"home">) {
       >
         <Header
           showGreeting={true}
-          onAvatarPress={() => navigation.navigate("profile")}
+          onAvatarPress={() =>
+            navigation.navigate("profile", { screen: "profileMain" })
+          }
         />
         <ScrollView showsVerticalScrollIndicator={false}>
           {/* Events Carousel */}
@@ -233,6 +265,15 @@ export function Home({ navigation }: AppTabScreenProps<"home">) {
                 <Text className="text-gray-500">Nenhum evento agendado.</Text>
               </View>
             )}
+          </View>
+
+          {/* Trail Highlight */}
+          <View className="mt-8">
+            <TrailHighlightCard
+              onPress={() =>
+                navigation.navigate("trails", { screen: "TrailList" })
+              }
+            />
           </View>
 
           {/* Quick Access */}
