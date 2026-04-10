@@ -20,16 +20,17 @@ export function OptionSelector<T extends string>({
   onSelect,
 }: OptionSelectorProps<T>) {
   return (
-    <View className="flex-row justify-between my-2 gap-2">
+    <View className="flex-row flex-wrap my-2 gap-2">
       {options.map(({ value, label, icon }) => (
         <TouchableOpacity
           key={value}
           onPress={() => onSelect(value)}
-          className={`flex-1 items-center justify-center py-3 rounded-lg border-2 ${
+          className={`items-center justify-center py-3 px-4 rounded-lg border-2 ${
             selectedValue === value
               ? "bg-green-800 border-green-800"
               : "bg-white border-gray-200"
           }`}
+          style={{ flexGrow: 1, minWidth: "30%" }}
         >
           {icon && (
             <MaterialIcons
@@ -41,7 +42,7 @@ export function OptionSelector<T extends string>({
             />
           )}
           <Text
-            className={`font-bold ${
+            className={`font-bold mt-1 text-center ${
               selectedValue === value ? "text-white" : "text-gray-700"
             }`}
           >

@@ -9,7 +9,7 @@ import {
   Platform,
   Alert,
 } from "react-native";
-import { AppScreenProps } from "@/routes/app.routes";
+import { AppStackScreenProps } from "@/routes/types";
 
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
@@ -24,7 +24,7 @@ import Toast from "react-native-toast-message";
 import { z } from "zod";
 import { signUpSchema } from "@/utils/schemas/authSchemas";
 
-export function Register({ navigation }: AppScreenProps<"register">) {
+export function Register({ navigation }: AppStackScreenProps<"register">) {
   const { isLoaded, signUp, setActive } = useSignUp();
   const { handleSocialPress } = useSocialAuth();
 

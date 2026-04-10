@@ -44,18 +44,26 @@ export const useLocation = ({
   }, [requestBackground, onError]);
 
   useEffect(() => {
+    let isMounted = true;
+
     if (enabled && hasPermission) {
       const startWatching = async () => {
-        watcher.current = await Location.watchPositionAsync(
+        const sub = await Location.watchPositionAsync(
           {
             accuracy: Location.Accuracy.BestForNavigation,
             timeInterval: 1000,
             distanceInterval: 1,
           },
           (location) => {
-            onLocationUpdate(location);
+            if (isMounted) onLocationUpdate(location);
           }
         );
+        
+        if (!isMounted) {
+          sub.remove();
+        } else {
+          watcher.current = sub;
+        }
       };
       startWatching();
     } else {
@@ -66,6 +74,7 @@ export const useLocation = ({
     }
 
     return () => {
+      isMounted = false;
       if (watcher.current) {
         watcher.current.remove();
         watcher.current = null;

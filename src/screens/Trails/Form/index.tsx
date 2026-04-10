@@ -296,22 +296,19 @@ export function TrailForm() {
         }
       }
 
-      // 3. Filtrar coordenadas para manter apenas as que são waypoints
-      const finalCoordinates = waypointOrders
-        .map((order) => {
-          const coord = data.coordinates[order - 1];
-          return coord ? { ...coord, originalOrder: order } : null;
-        })
-        .filter(Boolean) as {
-        latitude: number;
-        longitude: number;
-        originalOrder: number;
-      }[];
+      // 3. Preparar o trajeto completo com a ordem correta para o mapa
+      const finalCoordinates = data.coordinates.map((coord, index) => ({
+        latitude: coord.latitude,
+        longitude: coord.longitude,
+        order: index + 1,
+      }));
 
-      // 4. Preparar payload dos Waypoints com base nas coordenadas filtradas
+      // 4. Preparar payload dos Waypoints com base nas coordenadas originais
       const waypointsPayload = await Promise.all(
-        finalCoordinates.map(async (coord, index) => {
-          const waypointData = waypointsDataRef.current[coord.originalOrder];
+        waypointOrders.map(async (order) => {
+          const waypointData = waypointsDataRef.current[order];
+          if (!waypointData) return null;
+
           let waypointImageUrl = waypointData.existingImageUrl || "";
 
           if (waypointData.image) {
@@ -322,7 +319,7 @@ export function TrailForm() {
               waypointImageUrl = url;
             } else {
               console.warn(
-                `Falha no upload da imagem para o waypoint #${index + 1}`
+                `Falha no upload da imagem para o waypoint #${order}`
               );
             }
           }
@@ -332,20 +329,16 @@ export function TrailForm() {
             name: waypointData.name,
             description: waypointData.description,
             imageUrl: waypointImageUrl,
-            order: index + 1, // Nova ordem sequencial
+            order: order, // O backend exige que order = coordinate.order
           };
         })
-      );
+      ).then(results => results.filter(Boolean));
 
       // 5. Criar/Atualizar a trilha com os dados corretos
       const trailPayload = {
         ...data,
         imageUrls: [...existingImageUrls, ...uploadedTrailImageUrls],
-        coordinates: finalCoordinates.map((coord, index) => ({
-          latitude: coord.latitude,
-          longitude: coord.longitude,
-          order: index + 1,
-        })),
+        coordinates: finalCoordinates,
         waypoints: waypointsPayload,
       };
 
@@ -487,7 +480,7 @@ export function TrailForm() {
                 coordinates={trailPath}
                 waypoints={
                   waypointOrders
-                    ?.map((order) => {
+                    ?.map((order, index) => {
                       const waypointData = waypointsDataRef.current[order];
                       const coordinate = trailPath[order - 1];
 
@@ -504,7 +497,7 @@ export function TrailForm() {
                         description: waypointData.description,
                         latitude: coordinate.latitude,
                         longitude: coordinate.longitude,
-                        order: order,
+                        order: index + 1,
                         imageUrl: imageUrl,
                       };
                     })

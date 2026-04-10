@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   View,
   Text,
@@ -33,7 +33,6 @@ export function RecordTrailScreen() {
     null
   );
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  // const [useSimulator, setUseSimulator] = useState(__DEV__); // simulador
   const [useSimulator, setUseSimulator] = useState(false); // GPS físico
   const {
     time,
@@ -72,21 +71,24 @@ export function RecordTrailScreen() {
     })();
   }, []);
 
-  const locationCallback = (location: Location.LocationObject) => {
-    const newPoint = location.coords;
-    if (isRecording) {
-      setPath((prevPath) => [...prevPath, newPoint]);
-    }
-    setCurrentLocation(newPoint);
-    mapRef.current?.animateToRegion(
-      {
-        ...newPoint,
-        latitudeDelta: 0.005,
-        longitudeDelta: 0.005,
-      },
-      500
-    );
-  };
+  const locationCallback = useCallback(
+    (location: Location.LocationObject) => {
+      const newPoint = location.coords;
+      if (isRecording) {
+        setPath((prevPath) => [...prevPath, newPoint]);
+      }
+      setCurrentLocation(newPoint);
+      mapRef.current?.animateToRegion(
+        {
+          ...newPoint,
+          latitudeDelta: 0.005,
+          longitudeDelta: 0.005,
+        },
+        500
+      );
+    },
+    [isRecording]
+  );
 
   // Hook para localização real via GPS
   useLocation({

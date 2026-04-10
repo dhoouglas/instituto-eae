@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -45,19 +45,23 @@ export function FollowTrailScreen() {
 
   const [trail, setTrail] = useState<Trail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [userLocation, setUserLocation] =
     useState<Location.LocationObjectCoords | null>(null);
   const [isStarted, setIsStarted] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  // const [useSimulator, setUseSimulator] = useState(__DEV__); // simulador
   const [useSimulator, setUseSimulator] = useState(false); // GPS físico
+
+  const handleLocationUpdate = useCallback(
+    (location: Location.LocationObject) => {
+      setUserLocation(location.coords);
+    },
+    []
+  );
 
   useLocation({
     enabled: isStarted && !isPaused && !useSimulator,
-    onLocationUpdate: (location) => {
-      setUserLocation(location.coords);
-    },
+    onLocationUpdate: handleLocationUpdate,
     onError: (error) => {
       Alert.alert("Erro de Localização", error);
     },
@@ -78,9 +82,7 @@ export function FollowTrailScreen() {
           }))
         : [],
     },
-    (location) => {
-      setUserLocation(location.coords);
-    }
+    handleLocationUpdate
   );
 
   useEffect(() => {
