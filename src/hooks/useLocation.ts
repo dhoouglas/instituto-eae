@@ -21,23 +21,24 @@ export const useLocation = ({
     const requestPermissions = async () => {
       const { status: foregroundStatus } =
         await Location.requestForegroundPermissionsAsync();
+      
       if (foregroundStatus !== "granted") {
         onError?.("A permissão para acessar a localização foi negada.");
         setHasPermission(false);
         return;
       }
 
+      // Se chegamos aqui, a localização básica (Foreground) foi permitida.
+      setHasPermission(true);
+
       if (requestBackground) {
+        // Pedimos background separadamente, mas não bloqueamos se for negado.
         const { status: backgroundStatus } =
           await Location.requestBackgroundPermissionsAsync();
         if (backgroundStatus !== "granted") {
-          onError?.(
-            "A permissão para acessar a localização em segundo plano foi negada."
-          );
+          console.warn("Permissão de localização em segundo plano negada.");
         }
       }
-
-      setHasPermission(true);
     };
 
     requestPermissions();

@@ -230,7 +230,6 @@ export function RecordTrailScreen() {
                 longitudeDelta: 0.005,
               }}
               showsUserLocation
-              followsUserLocation
             >
               <Polyline
                 coordinates={path}
