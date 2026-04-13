@@ -133,6 +133,7 @@ export function TrailMap({
                 description={waypoint.description}
                 onPress={() => onWaypointPress?.(waypoint)}
                 anchor={{ x: 0.5, y: 1 }}
+                tracksViewChanges={false}
               >
                 <View className="items-center justify-center">
                   <FontAwesome
@@ -161,6 +162,7 @@ export function TrailMap({
               coordinate={coordinates[0]}
               title="Início da Trilha"
               anchor={{ x: 0.5, y: 1 }}
+              tracksViewChanges={false}
             >
               <View className="items-center">
                 <View className="h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-[#10B981] shadow-lg shadow-black">
@@ -176,6 +178,7 @@ export function TrailMap({
                 coordinate={coordinates[coordinates.length - 1]}
                 title="Fim da Trilha"
                 anchor={{ x: 0.5, y: 1 }}
+                tracksViewChanges={false}
               >
                 <View className="items-center">
                   <View className="h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-[#000000] shadow-lg shadow-black">

@@ -304,10 +304,7 @@ export function TrailDetails() {
           <TouchableOpacity
             className="bg-green-700 py-4 rounded-lg items-center justify-center"
             onPress={() =>
-              navigation.navigate("trails", {
-                screen: "FollowTrail",
-                params: { trailId: trail.id },
-              })
+              (navigation as any).navigate("FollowTrail", { trailId: trail.id })
             }
           >
             <Text className="text-white font-bold text-lg">Seguir Trilha</Text>

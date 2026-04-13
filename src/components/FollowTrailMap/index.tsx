@@ -357,6 +357,7 @@ export function FollowTrailMap({
               coordinate={coordinates[0]}
               title="Início da Trilha"
               anchor={{ x: 0.5, y: 1 }}
+              tracksViewChanges={false}
             >
               <View className="items-center">
                 <View className="h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-green-500 shadow-lg shadow-black">
@@ -372,6 +373,7 @@ export function FollowTrailMap({
                 coordinate={coordinates[coordinates.length - 1]}
                 title="Fim da Trilha"
                 anchor={{ x: 0.5, y: 1 }}
+                tracksViewChanges={false}
               >
                 <View className="items-center">
                   <View className="h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-black shadow-lg shadow-black">
@@ -400,6 +402,7 @@ export function FollowTrailMap({
             title={waypoint.name}
             description={waypoint.description}
             onPress={() => setSelectedWaypoint(waypoint)}
+            tracksViewChanges={false}
           >
             <View className="items-center justify-center">
               <FontAwesome
