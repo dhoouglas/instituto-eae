@@ -62,15 +62,6 @@ export function TrailMap({
     }
   }, [coordinates]);
 
-  useEffect(() => {
-    // A small delay to ensure the map layout is ready
-    const timer = setTimeout(() => {
-      fitMapToCoordinates();
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [fitMapToCoordinates]);
-
   const handleMapPress = (event: { nativeEvent: { coordinate: any } }) => {
     if (!isEditing) return;
 
