@@ -48,58 +48,33 @@ export function RecordTrailScreen() {
 
   const mapRef = useRef<MapView>(null);
 
-  useEffect(() => {
-    (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        setErrorMsg("A permissão para acessar a localização foi negada");
-        Alert.alert(
-          "Permissão Negada",
-          "Para gravar uma trilha, precisamos da sua permissão para acessar a localização."
-        );
-        navigation.goBack();
-        return;
-      }
-
-      let location = await Location.getCurrentPositionAsync({});
-      setCurrentLocation(location.coords);
-      mapRef.current?.animateToRegion({
-        ...location.coords,
-        latitudeDelta: 0.005,
-        longitudeDelta: 0.005,
-      });
-    })();
-  }, []);
-
-  const locationCallback = useCallback(
-    (location: Location.LocationObject) => {
-      const newPoint = location.coords;
-      if (isRecording) {
-        setPath((prevPath) => [...prevPath, newPoint]);
-      }
-      setCurrentLocation(newPoint);
-      mapRef.current?.animateToRegion(
-        {
-          ...newPoint,
-          latitudeDelta: 0.005,
-          longitudeDelta: 0.005,
-        },
-        500
-      );
-    },
-    [isRecording]
-  );
-
   // Hook para localização real via GPS
-  useLocation({
+  const { hasPermission } = useLocation({
     enabled: isRecording && !useSimulator,
-    requestBackground: true,
     onLocationUpdate: locationCallback,
     onError: (error) => {
       setErrorMsg(error);
       Alert.alert("Erro de Localização", error);
     },
   });
+
+  useEffect(() => {
+    if (hasPermission) {
+      (async () => {
+        try {
+          let location = await Location.getCurrentPositionAsync({});
+          setCurrentLocation(location.coords);
+          mapRef.current?.animateToRegion({
+            ...location.coords,
+            latitudeDelta: 0.005,
+            longitudeDelta: 0.005,
+          });
+        } catch (e) {
+          console.warn("Não foi possível obter a localização inicial", e);
+        }
+      })();
+    }
+  }, [hasPermission]);
 
   // Hook para simular a localização em desenvolvimento
   useMockedLocation(
@@ -230,6 +205,7 @@ export function RecordTrailScreen() {
                 longitudeDelta: 0.005,
               }}
               showsUserLocation
+              showsMyLocationButton={false}
             >
               <Polyline
                 coordinates={path}

@@ -18,12 +18,15 @@ export const useLocation = ({
   const watcher = useRef<Location.LocationSubscription | null>(null);
 
   useEffect(() => {
+    // Evita pedir permissão em loop se o componente pai re-renderizar
+    if (hasPermission) return;
+
     const requestPermissions = async () => {
       const { status: foregroundStatus } =
         await Location.requestForegroundPermissionsAsync();
       
       if (foregroundStatus !== "granted") {
-        onError?.("A permissão para acessar a localização foi negada.");
+        if (onError) onError("A permissão para acessar a localização foi negada.");
         setHasPermission(false);
         return;
       }
@@ -42,7 +45,7 @@ export const useLocation = ({
     };
 
     requestPermissions();
-  }, [requestBackground, onError]);
+  }, [requestBackground, hasPermission]); // Removido onError para não disparar re-render em loop
 
   useEffect(() => {
     let isMounted = true;
