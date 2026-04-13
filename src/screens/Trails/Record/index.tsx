@@ -48,27 +48,45 @@ export function RecordTrailScreen() {
 
   const mapRef = useRef<MapView>(null);
 
+  const locationCallback = useCallback(
+    (location: Location.LocationObject) => {
+      const newPoint = location.coords;
+      if (isRecording) {
+        setPath((prevPath) => [...prevPath, newPoint]);
+      }
+      setCurrentLocation(newPoint);
+    },
+    [isRecording]
+  );
+
+  const handleLocationError = useCallback((error: string) => {
+    setErrorMsg(error);
+    Alert.alert("Erro de Localização", error);
+  }, []);
+
   // Hook para localização real via GPS
   const { hasPermission } = useLocation({
     enabled: isRecording && !useSimulator,
     onLocationUpdate: locationCallback,
-    onError: (error) => {
-      setErrorMsg(error);
-      Alert.alert("Erro de Localização", error);
-    },
+    onError: handleLocationError,
   });
 
   useEffect(() => {
     if (hasPermission) {
       (async () => {
         try {
-          let location = await Location.getCurrentPositionAsync({});
-          setCurrentLocation(location.coords);
-          mapRef.current?.animateToRegion({
-            ...location.coords,
-            latitudeDelta: 0.005,
-            longitudeDelta: 0.005,
+          const location = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
           });
+          setCurrentLocation(location.coords);
+          if (location.coords.latitude && location.coords.longitude) {
+            mapRef.current?.animateToRegion({
+              latitude: location.coords.latitude,
+              longitude: location.coords.longitude,
+              latitudeDelta: 0.005,
+              longitudeDelta: 0.005,
+            });
+          }
         } catch (e) {
           console.warn("Não foi possível obter a localização inicial", e);
         }
