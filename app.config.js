@@ -4,7 +4,7 @@ module.exports = {
     slug: "Instituto-EAE",
     scheme: "instituto-eae",
     owner: "dhoouglas",
-    version: "1.0.1",
+    version: "1.0.5",
     orientation: "portrait",
     icon: "./assets/splash-icon-light.png",
     userInterfaceStyle: "automatic",
