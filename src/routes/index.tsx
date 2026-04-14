@@ -5,6 +5,7 @@ import { View } from "react-native";
 import { AppRoutes } from "./app.routes";
 import { AuthRoutes } from "./auth.routes";
 import { Loading } from "@/components/Loading";
+import Toast from "react-native-toast-message";
 
 export function Routes() {
   const { isLoaded, isSignedIn } = useAuth();
@@ -20,6 +21,7 @@ export function Routes() {
   return (
     <NavigationContainer>
       {isSignedIn ? <AppRoutes /> : <AuthRoutes />}
+      <Toast />
     </NavigationContainer>
   );
 }
