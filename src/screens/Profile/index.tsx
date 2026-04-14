@@ -32,14 +32,14 @@ const ProfileMenuItem = ({
 }) => (
   <TouchableOpacity
     onPress={onPress}
-    className={`flex-row items-center p-4 rounded-lg mb-3 ${
+    className={`flex-row items-center px-5 py-4 rounded-xl mb-3 ${
       isLogout ? "bg-red-50" : "bg-gray-50"
     }`}
     activeOpacity={0.7}
   >
     {icon}
     <Text
-      className={`text-lg ml-4 font-[Inter_500Medium] ${
+      className={`text-[17px] ml-4 font-[Inter_600SemiBold] ${
         isLogout ? "text-red-600" : "text-gray-700"
       }`}
     >
@@ -48,7 +48,7 @@ const ProfileMenuItem = ({
     {!isLogout && (
       <FontAwesome
         name="chevron-right"
-        size={16}
+        size={14}
         color="#A1A1AA"
         className="ml-auto"
       />
@@ -173,14 +173,11 @@ export function Profile({
     <SafeAreaView className="flex-1 bg-gray-100">
       <ScrollView>
         {/* Profile Header */}
-        <ImageBackground
-          source={require("@/assets/bg.png")}
-          className="pt-20 pb-4 px-6 items-center"
-        >
+        <View className="bg-green-700 pt-20 pb-8 px-6 items-center rounded-b-3xl">
           <TouchableOpacity
             onPress={handleSelectAvatar}
             disabled={isUploading}
-            className="mb-4 border-4 border-white rounded-full shadow-lg"
+            className="mb-4 border-4 border-white rounded-full bg-white"
           >
             {user?.hasImage ? (
               <Image
@@ -188,8 +185,8 @@ export function Profile({
                 className="w-28 h-28 rounded-full"
               />
             ) : (
-              <View className="w-28 h-28 rounded-full bg-green-logo items-center justify-center">
-                <Text className="text-white text-4xl font-bold">
+              <View className="w-28 h-28 rounded-full bg-green-100 items-center justify-center">
+                <Text className="text-green-800 text-4xl font-bold">
                   {getInitials()}
                 </Text>
               </View>
@@ -200,26 +197,26 @@ export function Profile({
               </View>
             )}
           </TouchableOpacity>
-          <Text className="text-3xl font-bold text-gray-700 font-[Inter_700Bold] shadow-sm">
+          <Text className="text-3xl font-[Inter_800ExtraBold] text-white">
             {user?.fullName}
           </Text>
           {user?.username && (
-            <Text className="text-xl font-semibold text-gray-500">
+            <Text className="text-xl font-[Inter_500Medium] text-green-100 mt-1">
               @{user?.username}
             </Text>
           )}
-          <Text className="text-lg text-gray-500 mt-1 font-[Inter_400Regular]">
+          <Text className="text-base text-green-100 mt-1 font-[Inter_500Medium]">
             {user?.primaryEmailAddress?.emailAddress}
           </Text>
-        </ImageBackground>
+        </View>
 
         <View className="p-6">
           {/* Account Settings Section */}
           <View className="mb-8">
-            <Text className="text-sm font-bold text-gray-500 uppercase mb-3 px-2">
+            <Text className="text-sm font-bold text-gray-500 uppercase mb-3 px-2 tracking-wider">
               Configurações da Conta
             </Text>
-            <View className="bg-white rounded-xl p-2 shadow-sm">
+            <View className="bg-white rounded-2xl p-2 border border-gray-100">
               <ProfileMenuItem
                 icon={<Feather name="user" size={20} color="#555" />}
                 text="Editar Perfil"
@@ -241,10 +238,10 @@ export function Profile({
           {/* Developer Tools Section */}
           {isAdmin && (
             <View className="mb-8">
-              <Text className="text-sm font-bold text-gray-500 uppercase mb-3 px-2">
+              <Text className="text-sm font-bold text-gray-500 uppercase mb-3 px-2 tracking-wider">
                 Ferramentas de Desenvolvedor
               </Text>
-              <View className="bg-white rounded-xl p-2 shadow-sm">
+              <View className="bg-white rounded-2xl p-2 border border-gray-100">
                 <ProfileMenuItem
                   icon={<FontAwesome name="dashboard" size={20} color="#555" />}
                   text="Painel do Administrador"
@@ -260,21 +257,23 @@ export function Profile({
           )}
 
           {/* Logout Section */}
-          <View className="mt-4">
-            <ProfileMenuItem
-              icon={<Feather name="log-out" size={20} color="#EF4444" />}
-              text="Sair (Logout)"
-              onPress={handleSignOut}
-              isLogout
-            />
+          <View className="mt-2">
+            <View className="bg-white rounded-2xl p-2 border border-gray-100">
+              <ProfileMenuItem
+                icon={<Feather name="log-out" size={20} color="#EF4444" />}
+                text="Sair (Logout)"
+                onPress={handleSignOut}
+                isLogout
+              />
+            </View>
           </View>
 
           {/* About Section */}
           <View className="mt-8">
-            <Text className="text-sm font-bold text-gray-500 uppercase mb-3 px-2">
+            <Text className="text-sm font-bold text-gray-500 uppercase mb-3 px-2 tracking-wider">
               Sobre
             </Text>
-            <View className="bg-white rounded-xl p-2 shadow-sm">
+            <View className="bg-white rounded-2xl p-2 border border-gray-100">
               <ProfileMenuItem
                 icon={<Feather name="info" size={20} color="#555" />}
                 text="Versão e Créditos"

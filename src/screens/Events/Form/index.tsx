@@ -40,12 +40,14 @@ const InputWithLabel = ({
   label: string;
   icon?: keyof typeof FontAwesome.glyphMap;
 }) => (
-  <View className="mb-4">
-    <Text className="text-base font-bold text-gray-700 mb-2">{label}</Text>
-    <View className="flex-row items-center w-full bg-gray-100 border border-gray-300 rounded-xl px-4 h-[58px]">
-      {icon && <FontAwesome name={icon} size={20} color="#6B7280" />}
+  <View className="mb-5">
+    <Text className="text-sm font-[Inter_700Bold] text-gray-700 mb-2 ml-1 uppercase tracking-wider">
+      {label}
+    </Text>
+    <View className="flex-row items-center w-full bg-white border border-gray-100 shadow-sm rounded-2xl px-5 h-16">
+      {icon && <FontAwesome name={icon} size={20} color="#9CA3AF" />}
       <Input
-        className="flex-1 bg-transparent border-none p-0 ml-3 text-lg"
+        className="flex-1 bg-transparent border-none p-0 ml-3 text-lg font-[Inter_600SemiBold] text-gray-800"
         placeholderTextColor="#9CA3AF"
         {...props}
       />
@@ -99,6 +101,11 @@ export function EventFormScreen({ route, navigation }: Props) {
     if (!pickerResult.canceled) {
       setImageAsset(pickerResult.assets[0]);
     }
+  };
+
+  const handleRemoveImage = () => {
+    setImageAsset(null);
+    setExistingImageUrl(null);
   };
 
   const onChangeDate = (event: DateTimePickerEvent, selectedDate?: Date) => {
@@ -232,14 +239,14 @@ export function EventFormScreen({ route, navigation }: Props) {
 
   if (isFetchingData) {
     return (
-      <SafeAreaView className="flex-1 justify-center items-center bg-white">
-        <ActivityIndicator size="large" color="#4b8c34" />
+      <SafeAreaView className="flex-1 justify-center items-center bg-gray-50">
+        <ActivityIndicator size="large" color="#166534" />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView className="flex-1 bg-gray-50">
       <View
         style={{
           paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
@@ -247,57 +254,66 @@ export function EventFormScreen({ route, navigation }: Props) {
         }}
       >
         <Header
-          title={isEditMode ? "Editar Evento" : "Criar Novo Evento"}
-          subtitle="Preencha os detalhes abaixo"
+          title={isEditMode ? "Editar Evento" : "Novo Evento"}
           showBackButton={true}
         />
 
-        <KeyboardAwareScrollView
-          resetScrollToCoords={{ x: 0, y: 0 }}
-          contentContainerStyle={{
-            justifyContent: "center",
-            paddingBottom: 255,
-          }}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View className="p-6 pt-2">
-            <Text className="text-base font-bold text-gray-700 mb-2">
-              Imagem de Capa
-            </Text>
-            <TouchableOpacity
-              onPress={handleSelectImage}
-              className="w-full h-48 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 items-center justify-center mb-6"
-            >
-              {imageAsset ? (
-                <Image
-                  source={{ uri: imageAsset.uri }}
-                  className="w-full h-full rounded-xl"
-                  resizeMode="cover"
-                />
-              ) : existingImageUrl ? (
-                <Image
-                  source={{ uri: existingImageUrl }}
-                  className="w-full h-full rounded-xl"
-                  resizeMode="cover"
-                />
-              ) : (
-                <View className="items-center">
-                  <FontAwesome name="image" size={40} color="#9CA3AF" />
-                  <Text className="text-gray-500 mt-2">
-                    Clique para escolher uma imagem
-                  </Text>
+        <View className="flex-1">
+          <KeyboardAwareScrollView
+            resetScrollToCoords={{ x: 0, y: 0 }}
+            contentContainerStyle={{
+              paddingHorizontal: 24,
+              paddingTop: 16,
+              paddingBottom: 120, // Espaço para o botão fixo
+            }}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            enableOnAndroid={true}
+            extraScrollHeight={120}
+          >
+            {/* Image Picker */}
+            <View className="mb-6">
+              <Text className="text-sm font-[Inter_700Bold] text-gray-700 mb-2 ml-1 uppercase tracking-wider">
+                Capa do Evento
+              </Text>
+              {imageAsset || existingImageUrl ? (
+                <View className="w-full h-48 rounded-3xl overflow-hidden shadow-sm border border-gray-100">
+                  <Image
+                    source={{ uri: imageAsset ? imageAsset.uri : existingImageUrl! }}
+                    className="w-full h-full"
+                    resizeMode="cover"
+                  />
+                  <TouchableOpacity
+                    onPress={handleRemoveImage}
+                    className="absolute top-3 right-3 bg-red-500/90 w-10 h-10 rounded-full items-center justify-center backdrop-blur-md"
+                  >
+                    <FontAwesome name="trash" size={16} color="white" />
+                  </TouchableOpacity>
                 </View>
+              ) : (
+                <TouchableOpacity
+                  onPress={handleSelectImage}
+                  activeOpacity={0.7}
+                  className="w-full h-48 bg-white rounded-3xl border-2 border-dashed border-green-300 items-center justify-center shadow-sm"
+                >
+                  <View className="bg-green-50 w-16 h-16 rounded-full items-center justify-center mb-3">
+                    <FontAwesome name="camera" size={24} color="#166534" />
+                  </View>
+                  <Text className="text-gray-500 font-[Inter_500Medium]">
+                    Toque para adicionar uma capa
+                  </Text>
+                </TouchableOpacity>
               )}
-            </TouchableOpacity>
+            </View>
 
             <InputWithLabel
               label="Título do Evento"
               icon="pencil"
-              placeholder="Ex: Mutirão de Limpeza"
+              placeholder="Ex: Mutirão de Limpeza..."
               value={formData.title}
               onChangeText={(val) => handleInputChange("title", val)}
             />
+            
             <InputWithLabel
               label="Localização"
               icon="map-marker"
@@ -306,22 +322,25 @@ export function EventFormScreen({ route, navigation }: Props) {
               onChangeText={(text) => handleInputChange("location", text)}
             />
 
-            <Text className="text-base font-bold text-gray-700 mb-2">
-              Data do Evento
-            </Text>
-            <TouchableOpacity
-              onPress={() => setShowDatePicker(true)}
-              className="w-full bg-gray-100 border border-gray-300 rounded-xl p-4 flex-row items-center mb-4 h-[58px]"
-            >
-              <FontAwesome name="calendar" size={20} color="#6B7280" />
-              <Text className="text-lg text-gray-800 ml-3">
-                {formData.date.toLocaleDateString("pt-BR", {
-                  day: "2-digit",
-                  month: "long",
-                  year: "numeric",
-                })}
+            <View className="mb-5">
+              <Text className="text-sm font-[Inter_700Bold] text-gray-700 mb-2 ml-1 uppercase tracking-wider">
+                Data do Evento
               </Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setShowDatePicker(true)}
+                activeOpacity={0.7}
+                className="w-full bg-white border border-gray-100 shadow-sm rounded-2xl px-5 flex-row items-center h-16"
+              >
+                <FontAwesome name="calendar" size={20} color="#9CA3AF" />
+                <Text className="text-lg text-gray-800 font-[Inter_600SemiBold] ml-3">
+                  {formData.date.toLocaleDateString("pt-BR", {
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </Text>
+              </TouchableOpacity>
+            </View>
 
             {showDatePicker && (
               <DateTimePicker
@@ -329,36 +348,38 @@ export function EventFormScreen({ route, navigation }: Props) {
                 mode="date"
                 display="default"
                 onChange={onChangeDate}
-                minimumDate={new Date()} // Opcional: não permite datas passadas
+                minimumDate={new Date()} // Não permite datas passadas
               />
             )}
 
-            <Text className="text-base font-bold text-gray-700 mb-2">
-              Descrição Detalhada
-            </Text>
-            <TextInput
-              placeholder="Descreva os detalhes do evento..."
-              value={formData.description}
-              onChangeText={(text) => handleInputChange("description", text)}
-              multiline
-              numberOfLines={6}
-              className="w-full border border-gray-300 rounded-xl p-4 text-base h-36 bg-gray-100"
-              textAlignVertical="top"
-            />
-
-            <View className="mt-8 mb-4">
-              <Button
-                title={isEditMode ? "Salvar Alterações" : "Criar Evento"}
-                onPress={handleSaveEvent}
-                isLoading={isUploading || isSubmitting} // Loading unificado
-                className="bg-green-logo py-4 rounded-xl items-center justify-center"
-                textClassName="text-white text-lg font-bold"
-                hasShadow
-                shadowColor="#4b8c34"
+            <View className="mb-8">
+              <Text className="text-sm font-[Inter_700Bold] text-gray-700 mb-2 ml-1 uppercase tracking-wider">
+                Descrição Detalhada
+              </Text>
+              <TextInput
+                placeholder="Descreva a programação e os detalhes do evento..."
+                placeholderTextColor="#9CA3AF"
+                value={formData.description}
+                onChangeText={(text) => handleInputChange("description", text)}
+                multiline
+                numberOfLines={6}
+                className="bg-white px-5 py-4 rounded-2xl text-base font-[Inter_400Regular] text-gray-700 h-40 align-top shadow-sm border border-gray-100 leading-relaxed"
+                textAlignVertical="top"
               />
             </View>
+          </KeyboardAwareScrollView>
+
+          {/* Sticky Bottom Button */}
+          <View className="absolute bottom-0 left-0 right-0 p-5 bg-gray-50/90 backdrop-blur-xl border-t border-gray-200/50">
+            <Button
+              title={isEditMode ? "Salvar Alterações" : "Criar Evento"}
+              onPress={handleSaveEvent}
+              isLoading={isUploading || isSubmitting}
+              className="bg-green-700 h-14 rounded-full items-center justify-center shadow-lg shadow-green-900/20"
+              textClassName="text-white text-lg font-[Inter_700Bold]"
+            />
           </View>
-        </KeyboardAwareScrollView>
+        </View>
       </View>
     </SafeAreaView>
   );

@@ -13,7 +13,7 @@ export function FloatingActionButton() {
 
   return (
     <TouchableOpacity
-      className="absolute bottom-[100px] right-5 h-[60px] w-[60px] items-center justify-center rounded-full bg-[#488A35] shadow-lg shadow-black"
+      className="absolute bottom-[100px] right-5 h-[60px] w-[60px] items-center justify-center rounded-full bg-[#488A35]"
       onPress={handlePress}
     >
       <FontAwesome name="map-signs" size={24} color="white" />

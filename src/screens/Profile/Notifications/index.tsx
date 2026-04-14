@@ -23,12 +23,12 @@ const NotificationToggle = ({
   value: boolean;
   onValueChange: (value: boolean) => void;
 }) => (
-  <View className="flex-row justify-between items-center p-4 border-b border-gray-200">
-    <Text className="text-lg text-gray-700 flex-1 pr-4">{label}</Text>
+  <View className="flex-row justify-between items-center p-5 border-b border-gray-100">
+    <Text className="text-[17px] text-gray-800 flex-1 pr-4 font-[Inter_500Medium]">{label}</Text>
     <Switch
-      trackColor={{ false: "#767577", true: "#81b0ff" }}
-      thumbColor={value ? "#488A35" : "#f4f3f4"}
-      ios_backgroundColor="#3e3e3e"
+      trackColor={{ false: "#E4E4E7", true: "#86EFAC" }}
+      thumbColor={value ? "#15803D" : "#FAFAFA"}
+      ios_backgroundColor="#E4E4E7"
       onValueChange={onValueChange}
       value={value}
     />
@@ -134,7 +134,7 @@ export function Notifications({
         >
           <Header title="Notificações" showBackButton />
 
-          <View className="bg-white rounded-xl shadow-sm overflow-hidden">
+          <View className="bg-white rounded-2xl border border-gray-100 overflow-hidden mt-4">
             <NotificationToggle
               label="Novos eventos na minha área"
               value={preferences.newEvents}

@@ -9,13 +9,14 @@ import {
   Image,
   ActivityIndicator,
   Dimensions,
+  TouchableOpacity,
 } from "react-native";
-import { useFocusEffect, useRoute } from "@react-navigation/native";
+import { useFocusEffect, useRoute, useNavigation } from "@react-navigation/native";
 import { RouteProp } from "@react-navigation/native";
 import Toast from "react-native-toast-message";
 import PagerView from "react-native-pager-view";
+import { FontAwesome } from "@expo/vector-icons";
 
-import { Header } from "@/components/Header";
 import { FaunaFloraStackParamList } from "@/routes/types";
 import api from "@/lib/api";
 import { Button } from "@/components/Button";
@@ -41,10 +42,11 @@ type FaunaFloraItem = {
   imageUrls: string[];
 };
 
-const { width } = Dimensions.get("window");
+const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
 export function FaunaFloraDetailsScreen() {
   const route = useRoute<FaunaFloraDetailsRouteProp>();
+  const navigation = useNavigation();
   const { faunaFloraId, type } = route.params;
 
   const [item, setItem] = useState<FaunaFloraItem | null>(null);
@@ -81,122 +83,154 @@ export function FaunaFloraDetailsScreen() {
   const renderContent = () => {
     if (isLoading) {
       return (
-        <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#488A35" />
+        <View className="flex-1 justify-center items-center bg-white">
+          <ActivityIndicator size="large" color="#166534" />
         </View>
       );
     }
 
     if (fetchError || !item) {
       return (
-        <View className="flex-1 justify-center items-center p-6">
-          <Text className="text-lg text-red-500 text-center mb-4">
-            {fetchError || "Item não encontrado."}
+        <View className="flex-1 justify-center items-center p-6 bg-white">
+          <FontAwesome name="leaf" size={48} color="#D1D5DB" />
+          <Text className="text-xl font-[Inter_700Bold] text-gray-800 mt-4 text-center">
+            {fetchError || "Espécie não encontrada."}
           </Text>
-          <Button title="Tentar Novamente" onPress={fetchDetails} />
+          <Button title="Voltar" onPress={() => navigation.goBack()} className="mt-6 bg-green-700 w-full" />
         </View>
       );
     }
 
+    const getStatusConfig = (status: string) => {
+      switch (status) {
+        case "AMEACADA":
+          return { color: "text-red-800", bg: "bg-red-100", icon: "warning" };
+        case "EXTINTA":
+          return { color: "text-white", bg: "bg-gray-800", icon: "times-circle" };
+        default:
+          return { color: "text-green-800", bg: "bg-green-100", icon: "check-circle" };
+      }
+    };
+
+    const statusConfig = getStatusConfig(item.conservationStatus);
+
     return (
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{ paddingBottom: 40 }}
-      >
-        {item.imageUrls && item.imageUrls.length > 0 && (
-          <PagerView style={{ width, height: width * 0.75 }} initialPage={0}>
-            {item.imageUrls.map((url, index) => (
-              <View key={index}>
-                <Image
-                  source={{ uri: url }}
-                  className="w-full h-full"
-                  resizeMode="cover"
-                />
-              </View>
-            ))}
-          </PagerView>
-        )}
-        <View className="p-6">
-          <Text className="text-sm font-bold text-green-logo uppercase">
-            {item.type?.toUpperCase() === "FAUNA" ? "Fauna" : "Flora"}
-          </Text>
-          <Text className="text-3xl font-bold text-gray-800 mt-1">
+      <ScrollView showsVerticalScrollIndicator={false} bounces={false} className="bg-white">
+        <View style={{ height: screenHeight * 0.45 }}>
+          {item.imageUrls && item.imageUrls.length > 0 ? (
+            <PagerView style={{ flex: 1 }} initialPage={0}>
+              {item.imageUrls.map((url, index) => (
+                <View key={index}>
+                  <Image
+                    source={{ uri: url }}
+                    className="w-full h-full"
+                    resizeMode="cover"
+                  />
+                </View>
+              ))}
+            </PagerView>
+          ) : (
+            <View className="w-full h-full bg-green-50 items-center justify-center pt-10">
+              <FontAwesome name="leaf" size={60} color="#166534" opacity={0.4} />
+            </View>
+          )}
+          <View className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black/60 to-transparent" />
+        </View>
+
+        <View className="bg-white -mt-8 rounded-t-[32px] pt-8 px-6 pb-20">
+          <View className="flex-row items-center mb-4">
+            <View className="bg-green-100 px-3 py-1.5 rounded-full mr-3">
+              <Text className="text-xs font-[Inter_800ExtraBold] text-green-800 uppercase tracking-wider">
+                {item.type?.toUpperCase() === "FAUNA" ? "Fauna" : "Flora"}
+              </Text>
+            </View>
+          </View>
+
+          <Text className="text-3xl font-[Inter_800ExtraBold] text-gray-900 leading-tight">
             {item.name}
           </Text>
-          <Text className="text-lg italic text-gray-600 mt-1">
+          <Text className="text-lg font-[Inter_500Medium] italic text-gray-500 mt-1 mb-6">
             {item.scientificName}
           </Text>
-          <View className="h-px bg-gray-200 my-6" />
 
-          {item.type === "FAUNA" ? (
-            <>
-              <View className="mb-4">
-                <Text className="text-lg font-bold text-gray-800 mb-1">
-                  Estado de Conservação
-                </Text>
-                <View
-                  className={`self-start px-3 py-1 rounded-full ${
-                    item.conservationStatus === "AMEACADA"
-                      ? "bg-red-100"
-                      : item.conservationStatus === "EXTINTA"
-                        ? "bg-gray-800"
-                        : "bg-green-100"
-                  }`}
-                >
-                  <Text
-                    className={`font-bold ${
-                      item.conservationStatus === "AMEACADA"
-                        ? "text-red-800"
-                        : item.conservationStatus === "EXTINTA"
-                          ? "text-white"
-                          : "text-green-800"
-                    }`}
-                  >
-                    {item.conservationStatus?.replace("_", " ")}
+          <View className="bg-gray-50 rounded-2xl p-4 border border-gray-100 mb-6">
+            {item.type === "FAUNA" ? (
+              <>
+                <View className="flex-row items-center mb-4">
+                  <View className="w-10 h-10 bg-green-100 rounded-full items-center justify-center mr-3">
+                    <FontAwesome name="map-o" size={18} color="#166534" />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-xs text-gray-500 font-[Inter_600SemiBold] uppercase tracking-wider mb-0.5">
+                      Habitat
+                    </Text>
+                    <Text className="text-base text-gray-800 font-[Inter_600SemiBold]">
+                      {item.habitat || "Não informado"}
+                    </Text>
+                  </View>
+                </View>
+
+                <View className="flex-row items-center">
+                  <View className={`w-10 h-10 ${statusConfig.bg} rounded-full items-center justify-center mr-3`}>
+                    <FontAwesome name={statusConfig.icon as any} size={18} color={statusConfig.color.includes('red') ? '#991B1B' : statusConfig.color.includes('green') ? '#166534' : '#FFFFFF'} />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-xs text-gray-500 font-[Inter_600SemiBold] uppercase tracking-wider mb-0.5">
+                      Conservação
+                    </Text>
+                    <Text className={`text-base font-[Inter_700Bold] ${statusConfig.color}`}>
+                      {item.conservationStatus?.replace("_", " ")}
+                    </Text>
+                  </View>
+                </View>
+              </>
+            ) : (
+              <View className="flex-row items-center">
+                <View className="w-10 h-10 bg-green-100 rounded-full items-center justify-center mr-3">
+                  <FontAwesome name="sitemap" size={18} color="#166534" />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-xs text-gray-500 font-[Inter_600SemiBold] uppercase tracking-wider mb-0.5">
+                    Família
+                  </Text>
+                  <Text className="text-base text-gray-800 font-[Inter_600SemiBold]">
+                    {item.family || "Não informada"}
                   </Text>
                 </View>
               </View>
-
-              <View className="mb-4">
-                <Text className="text-lg font-bold text-gray-800 mb-1">
-                  Habitat
-                </Text>
-                <Text className="text-base text-gray-700">{item.habitat}</Text>
-              </View>
-            </>
-          ) : (
-            <View className="mb-4">
-              <Text className="text-lg font-bold text-gray-800 mb-1">
-                Família
-              </Text>
-              <Text className="text-base text-gray-700">{item.family}</Text>
-            </View>
-          )}
-
-          <View className="mb-4">
-            <Text className="text-lg font-bold text-gray-800 mb-1">
-              Descrição
-            </Text>
-            <Text className="text-base text-gray-700 leading-relaxed">
-              {item.description}
-            </Text>
+            )}
           </View>
+
+          <View className="w-12 h-1.5 bg-green-600 rounded-full mb-6" />
+
+          <Text className="text-2xl font-[Inter_800ExtraBold] text-gray-900 mb-3">
+            Sobre a Espécie
+          </Text>
+          <Text className="text-[17px] text-gray-700 leading-relaxed font-[Inter_400Regular] mb-8">
+            {item.description}
+          </Text>
         </View>
       </ScrollView>
     );
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      <View
-        style={{
-          paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
-          flex: 1,
-        }}
-      >
-        <Header title="Detalhes" showBackButton={true} />
-        {renderContent()}
-      </View>
-    </SafeAreaView>
+    <View className="flex-1 bg-white">
+      <StatusBar translucent backgroundColor="transparent" barStyle={isLoading || !item?.imageUrls?.length ? "dark-content" : "light-content"} />
+      
+      {renderContent()}
+
+      <SafeAreaView className="absolute top-0 left-0 w-full" pointerEvents="box-none">
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          className="ml-4 mt-2 w-10 h-10 rounded-full items-center justify-center bg-white/30 backdrop-blur-md border border-white/40"
+          style={{
+            marginTop: Platform.OS === "android" ? (StatusBar.currentHeight || 24) + 10 : 10,
+          }}
+        >
+          <FontAwesome name="angle-left" size={24} color={isLoading || !item?.imageUrls?.length ? "#374151" : "white"} style={{ marginRight: 2 }} />
+        </TouchableOpacity>
+      </SafeAreaView>
+    </View>
   );
 }

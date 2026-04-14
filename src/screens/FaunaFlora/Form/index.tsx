@@ -298,21 +298,20 @@ export function FaunaFloraFormScreen() {
           <Header title="Catalogar Espécie" showBackButton={true} />
           <ScrollView
             className="flex-1"
-            contentContainerStyle={{ padding: 24 }}
+            contentContainerStyle={{ padding: 24, paddingBottom: 100 }}
             showsVerticalScrollIndicator={false}
           >
-            <View className="mb-6">
-              <Text className="text-xl font-bold text-gray-800">
-                Catalogar Nova Espécie
+            <View className="mb-8">
+              <Text className="text-3xl font-[Inter_800ExtraBold] text-gray-900 leading-tight">
+                {isEditing ? "Editar Espécie" : "Catalogar Espécie"}
               </Text>
-              <Text className="text-base text-gray-600 mt-1">
-                Preencha os dados para adicionar um novo item ao nosso catálogo
-                ambiental.
+              <Text className="text-base font-[Inter_400Regular] text-gray-500 mt-2 leading-relaxed">
+                Preencha os dados abaixo para manter o catálogo do Instituto EAE atualizado e ajudar na preservação.
               </Text>
             </View>
 
-            <View className="mb-4">
-              <Text className="text-base font-bold text-gray-700 mb-2">
+            <View className="mb-5">
+              <Text className="text-base font-[Inter_700Bold] text-gray-700 mb-2">
                 Nome Popular
               </Text>
               <Controller
@@ -334,8 +333,8 @@ export function FaunaFloraFormScreen() {
               )}
             </View>
 
-            <View className="mb-4">
-              <Text className="text-base font-bold text-gray-700 mb-2">
+            <View className="mb-6">
+              <Text className="text-base font-[Inter_700Bold] text-gray-700 mb-2">
                 Nome Científico
               </Text>
               <Controller
@@ -357,27 +356,31 @@ export function FaunaFloraFormScreen() {
               )}
             </View>
 
-            <Controller
-              control={control}
-              name="type"
-              render={({ field: { onChange, value } }) => (
-                <TypeSelector selectedValue={value} onSelectValue={onChange} />
+            <View className="mb-6">
+              <Controller
+                control={control}
+                name="type"
+                render={({ field: { onChange, value } }) => (
+                  <TypeSelector selectedValue={value} onSelectValue={onChange} />
+                )}
+              />
+              {errors.type && (
+                <Text className="text-red-500 text-sm mt-1">
+                  {errors.type.message}
+                </Text>
               )}
-            />
-            {errors.type && (
-              <Text className="text-red-500 text-sm mb-2">
-                {errors.type.message}
-              </Text>
-            )}
+            </View>
 
-            {selectedType === "FAUNA" ? (
-              <FaunaSpecificFields control={control} errors={errors} />
-            ) : (
-              <FloraSpecificFields control={control} errors={errors} />
-            )}
+            <View className="mb-2">
+              {selectedType === "FAUNA" ? (
+                <FaunaSpecificFields control={control} errors={errors} />
+              ) : (
+                <FloraSpecificFields control={control} errors={errors} />
+              )}
+            </View>
 
-            <View className="mb-4">
-              <Text className="text-base font-bold text-gray-700 mb-2">
+            <View className="mb-6">
+              <Text className="text-base font-[Inter_700Bold] text-gray-700 mb-2">
                 Descrição
               </Text>
               <Controller
@@ -385,7 +388,7 @@ export function FaunaFloraFormScreen() {
                 name="description"
                 render={({ field: { onChange, onBlur, value } }) => (
                   <Input
-                    placeholder="Fale sobre a espécie..."
+                    placeholder="Fale sobre as características, hábitos, etc..."
                     onBlur={onBlur}
                     onChangeText={onChange}
                     value={value}
@@ -403,22 +406,23 @@ export function FaunaFloraFormScreen() {
               )}
             </View>
 
-            <ImagePickerComponent
-              assets={imageAssets}
-              onAssetsChange={setImageAssets}
-              existingImageUrls={existingImageUrls}
-              onExistingImageUrlsChange={setExistingImageUrls}
-            />
+            <View className="mb-4">
+              <ImagePickerComponent
+                assets={imageAssets}
+                onAssetsChange={setImageAssets}
+                existingImageUrls={existingImageUrls}
+                onExistingImageUrlsChange={setExistingImageUrls}
+              />
+            </View>
 
             <View className="mt-8">
               <Button
                 title={isEditing ? "Salvar Alterações" : "Salvar Espécie"}
                 onPress={handleSubmit(onSubmit)}
                 isLoading={isSubmitting || isLoading || isUploading}
-                className="bg-green-logo py-4 rounded-xl items-center justify-center"
-                textClassName="text-white text-lg font-bold"
-                hasShadow
-                shadowColor="#4b8c34"
+                className="bg-green-700 h-14 rounded-full items-center justify-center"
+                textClassName="text-white text-lg font-[Inter_700Bold]"
+                style={{ elevation: 5, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4 }}
               />
             </View>
           </ScrollView>

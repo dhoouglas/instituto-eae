@@ -90,11 +90,11 @@ export function Security({ navigation }: ProfileStackScreenProps<"security">) {
         >
           <Header title="Segurança e Senha" showBackButton />
 
-          <View className="bg-white p-6 rounded-xl shadow-sm">
+          <View className="bg-white p-6 rounded-2xl border border-gray-100 mt-4">
             {!hasPassword && (
-              <View className="items-center text-center p-4 bg-blue-50 rounded-lg mb-6">
+              <View className="items-center text-center p-4 bg-blue-50 rounded-xl mb-6 border border-blue-100">
                 <Feather name="info" size={24} color="#3B82F6" />
-                <Text className="text-blue-800 text-center mt-2">
+                <Text className="text-blue-800 text-center mt-2 font-[Inter_500Medium]">
                   Você fez login com uma conta social. Cadastre uma senha para
                   ter outra opção de acesso.
                 </Text>
@@ -103,7 +103,7 @@ export function Security({ navigation }: ProfileStackScreenProps<"security">) {
 
             {hasPassword && (
               <>
-                <Text className="text-lg font-semibold text-gray-600 mb-1">
+                <Text className="text-sm font-[Inter_700Bold] text-gray-700 mb-2 uppercase tracking-wider">
                   Senha Atual
                 </Text>
                 <Input
@@ -114,12 +114,12 @@ export function Security({ navigation }: ProfileStackScreenProps<"security">) {
                   secureTextEntry
                   value={currentPassword}
                   onChangeText={setCurrentPassword}
-                  className="mb-4"
+                  className="mb-5"
                 />
               </>
             )}
 
-            <Text className="text-lg font-semibold text-gray-600 mb-1">
+            <Text className="text-sm font-[Inter_700Bold] text-gray-700 mb-2 uppercase tracking-wider">
               Nova Senha
             </Text>
             <Input
@@ -130,9 +130,9 @@ export function Security({ navigation }: ProfileStackScreenProps<"security">) {
               secureTextEntry
               value={newPassword}
               onChangeText={setNewPassword}
-              className="mb-4"
+              className="mb-5"
             />
-            <Text className="text-lg font-semibold text-gray-600 mb-1">
+            <Text className="text-sm font-[Inter_700Bold] text-gray-700 mb-2 uppercase tracking-wider">
               Confirmar Nova Senha
             </Text>
             <Input
@@ -148,8 +148,9 @@ export function Security({ navigation }: ProfileStackScreenProps<"security">) {
               title={hasPassword ? "Alterar Senha" : "Cadastrar Senha"}
               onPress={handleUpdatePassword}
               isLoading={isLoading}
-              className="bg-green-logo py-4 rounded-xl items-center justify-center mt-8"
-              textClassName="text-white font-bold text-lg"
+              className="bg-green-700 h-14 rounded-full items-center justify-center mt-8"
+              textClassName="text-white font-[Inter_700Bold] text-lg"
+              style={{ elevation: 2, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 }}
             />
           </View>
         </View>

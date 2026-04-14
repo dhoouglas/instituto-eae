@@ -9,7 +9,6 @@ import {
 import { StatusBar } from "react-native";
 import { Routes } from "@/routes";
 import { ClerkProvider } from "@clerk/clerk-expo";
-import Toast from "react-native-toast-message";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 export default function App() {
@@ -39,8 +38,6 @@ export default function App() {
 
         <Routes />
       </ClerkProvider>
-
-      <Toast />
     </SafeAreaProvider>
   );
 }

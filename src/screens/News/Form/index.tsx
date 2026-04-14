@@ -22,7 +22,6 @@ import {
 } from "@/utils/schemas/newsSchemas";
 
 import { Button } from "@/components/Button";
-import { Input } from "@/components/Input";
 import api from "@/lib/api";
 import { Header } from "@/components/Header";
 import { CategorySelector } from "@/components/CategorySelector";
@@ -102,6 +101,11 @@ export function NewsFormScreen({ route, navigation }: Props) {
     if (!pickerResult.canceled) {
       setImageAsset(pickerResult.assets[0]);
     }
+  };
+
+  const handleRemoveImage = () => {
+    setImageAsset(null);
+    setExistingImageUrl(null);
   };
 
   const handleSaveNews = async () => {
@@ -186,14 +190,14 @@ export function NewsFormScreen({ route, navigation }: Props) {
 
   if (isFetchingData) {
     return (
-      <SafeAreaView className="flex-1 justify-center items-center">
-        <ActivityIndicator size="large" color="#4b8c34" />
+      <SafeAreaView className="flex-1 bg-gray-50 justify-center items-center">
+        <ActivityIndicator size="large" color="#166534" />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView className="flex-1 bg-gray-50">
       <View
         style={{
           paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
@@ -201,86 +205,114 @@ export function NewsFormScreen({ route, navigation }: Props) {
         }}
       >
         <Header
-          title={isEditMode ? "Editar Notícia" : "Criar Nova Notícia"}
+          title={isEditMode ? "Editar Notícia" : "Nova Notícia"}
           showBackButton={true}
-          subtitle="Preencha os detalhes abaixo"
         />
 
-        <KeyboardAwareScrollView
-          resetScrollToCoords={{ x: 0, y: 0 }}
-          contentContainerStyle={{
-            justifyContent: "center",
-            paddingBottom: 255,
-          }}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View className="p-6">
-            <Text className="text-base font-bold text-gray-700 mb-2">
-              Imagem de Capa
-            </Text>
-            <TouchableOpacity
-              onPress={handleSelectImage}
-              className="w-full h-48 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 items-center justify-center mb-6"
-            >
-              {imageAsset ? (
-                <Image
-                  source={{ uri: imageAsset.uri }}
-                  className="w-full h-full rounded-xl"
-                  resizeMode="cover"
-                />
-              ) : existingImageUrl ? (
-                <Image
-                  source={{ uri: existingImageUrl }}
-                  className="w-full h-full rounded-xl"
-                  resizeMode="cover"
-                />
-              ) : (
-                <View className="items-center">
-                  <FontAwesome name="image" size={40} color="#9CA3AF" />
-                  <Text className="text-gray-500 mt-2">
-                    Clique para escolher uma imagem
-                  </Text>
+        <View className="flex-1">
+          <KeyboardAwareScrollView
+            resetScrollToCoords={{ x: 0, y: 0 }}
+            contentContainerStyle={{
+              paddingHorizontal: 24,
+              paddingTop: 16,
+              paddingBottom: 120, // Espaço para o botão fixo e margem
+            }}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            enableOnAndroid={true}
+            extraScrollHeight={120}
+          >
+            {/* Image Picker */}
+            <View className="mb-6">
+              <Text className="text-sm font-[Inter_700Bold] text-gray-700 mb-2 ml-1 uppercase tracking-wider">
+                Capa da Notícia
+              </Text>
+              {imageAsset || existingImageUrl ? (
+                <View className="w-full h-48 rounded-3xl overflow-hidden shadow-sm border border-gray-100">
+                  <Image
+                    source={{ uri: imageAsset ? imageAsset.uri : existingImageUrl! }}
+                    className="w-full h-full"
+                    resizeMode="cover"
+                  />
+                  <TouchableOpacity
+                    onPress={handleRemoveImage}
+                    className="absolute top-3 right-3 bg-red-500/90 w-10 h-10 rounded-full items-center justify-center backdrop-blur-md"
+                  >
+                    <FontAwesome name="trash" size={16} color="white" />
+                  </TouchableOpacity>
                 </View>
+              ) : (
+                <TouchableOpacity
+                  onPress={handleSelectImage}
+                  activeOpacity={0.7}
+                  className="w-full h-48 bg-white rounded-3xl border-2 border-dashed border-green-300 items-center justify-center shadow-sm"
+                >
+                  <View className="bg-green-50 w-16 h-16 rounded-full items-center justify-center mb-3">
+                    <FontAwesome name="camera" size={24} color="#166534" />
+                  </View>
+                  <Text className="text-gray-500 font-[Inter_500Medium]">
+                    Toque para adicionar uma capa
+                  </Text>
+                </TouchableOpacity>
               )}
-            </TouchableOpacity>
+            </View>
 
-            <Input
-              value={formData.title}
-              onChangeText={(val) => handleInputChange("title", val)}
-              placeholder="Título da notícia"
-              className="mb-4"
-            />
-            <CategorySelector
-              selectedCategory={formData.category}
-              onSelectCategory={(category) =>
-                handleInputChange("category", category)
-              }
-            />
-
-            <TextInput
-              placeholder="Conteúdo completo da notícia..."
-              value={formData.content}
-              onChangeText={(val) => handleInputChange("content", val)}
-              multiline
-              numberOfLines={10}
-              className="w-full border border-gray-300 rounded-xl p-4 text-base h-56 bg-gray-100 align-top"
-              textAlignVertical="top"
-            />
-
-            <View className="mt-8">
-              <Button
-                title={isEditMode ? "Salvar Alterações" : "Publicar Notícia"}
-                onPress={handleSaveNews}
-                isLoading={isUploading || isSubmitting}
-                className="bg-green-logo py-4 rounded-xl items-center justify-center"
-                textClassName="text-white text-lg font-bold"
-                hasShadow
-                shadowColor="#4b8c34"
+            {/* Title */}
+            <View className="mb-5">
+              <Text className="text-sm font-[Inter_700Bold] text-gray-700 mb-2 ml-1 uppercase tracking-wider">
+                Título Principal
+              </Text>
+              <TextInput
+                value={formData.title}
+                onChangeText={(val) => handleInputChange("title", val)}
+                placeholder="Ex: Novo mutirão de plantio..."
+                placeholderTextColor="#9CA3AF"
+                className="bg-white px-5 py-4 rounded-2xl text-lg font-[Inter_600SemiBold] text-gray-800 shadow-sm border border-gray-100"
               />
             </View>
+
+            {/* Category */}
+            <View className="mb-5">
+              <Text className="text-sm font-[Inter_700Bold] text-gray-700 mb-2 ml-1 uppercase tracking-wider">
+                Categoria
+              </Text>
+              <CategorySelector
+                selectedCategory={formData.category}
+                onSelectCategory={(category) =>
+                  handleInputChange("category", category)
+                }
+              />
+            </View>
+
+            {/* Content */}
+            <View className="mb-8">
+              <Text className="text-sm font-[Inter_700Bold] text-gray-700 mb-2 ml-1 uppercase tracking-wider">
+                Conteúdo
+              </Text>
+              <TextInput
+                placeholder="Escreva a notícia completa aqui..."
+                placeholderTextColor="#9CA3AF"
+                value={formData.content}
+                onChangeText={(val) => handleInputChange("content", val)}
+                multiline
+                numberOfLines={10}
+                className="bg-white px-5 py-4 rounded-2xl text-base font-[Inter_400Regular] text-gray-700 h-64 align-top shadow-sm border border-gray-100 leading-relaxed"
+                textAlignVertical="top"
+              />
+            </View>
+          </KeyboardAwareScrollView>
+
+          {/* Sticky Bottom Button */}
+          <View className="absolute bottom-0 left-0 right-0 p-5 bg-gray-50/90 backdrop-blur-xl border-t border-gray-200/50">
+            <Button
+              title={isEditMode ? "Salvar Alterações" : "Publicar Notícia"}
+              onPress={handleSaveNews}
+              isLoading={isUploading || isSubmitting}
+              className="bg-green-700 h-14 rounded-full items-center justify-center shadow-lg shadow-green-900/20"
+              textClassName="text-white text-lg font-[Inter_700Bold]"
+            />
           </View>
-        </KeyboardAwareScrollView>
+        </View>
       </View>
     </SafeAreaView>
   );

@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import Toast from "react-native-toast-message";
 import { useAuth } from "@clerk/clerk-expo";
 import api from "@/lib/api";
+import { FontAwesome } from "@expo/vector-icons";
 
 export type RSVPStatus = "CONFIRMED" | "MAYBE" | "DECLINED";
 
@@ -15,6 +16,7 @@ export function RSVPSelector({ eventId, initialStatus }: Props) {
   const { getToken } = useAuth();
   const [selection, setSelection] = useState<RSVPStatus | null>(initialStatus);
   const [isLoading, setIsLoading] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState<RSVPStatus | null>(null);
 
   useEffect(() => {
     setSelection(initialStatus);
@@ -22,7 +24,12 @@ export function RSVPSelector({ eventId, initialStatus }: Props) {
 
   const handleRsvpPress = useCallback(
     async (status: RSVPStatus) => {
+      // Evita chamadas duplicadas
+      if (isLoading || status === selection) return;
+      
+      setPendingStatus(status);
       setIsLoading(true);
+      
       try {
         const token = await getToken();
         if (!token) {
@@ -46,41 +53,75 @@ export function RSVPSelector({ eventId, initialStatus }: Props) {
         Toast.show({ type: "error", text1: "Erro ao salvar sua resposta." });
       } finally {
         setIsLoading(false);
+        setPendingStatus(null);
       }
     },
-    [eventId, getToken]
+    [eventId, getToken, selection, isLoading]
   );
 
-  const renderButton = (status: RSVPStatus, text: string) => {
+  const getButtonStyles = (status: RSVPStatus) => {
     const isSelected = selection === status;
-    const containerClasses = isSelected ? "bg-green-logo" : "bg-green-100";
-    const textClasses = isSelected ? "text-white" : "text-green-logo";
+    const isPending = pendingStatus === status;
+    
+    switch (status) {
+      case "CONFIRMED":
+        return {
+          icon: "check" as const,
+          label: "Vou!",
+          bgClass: isSelected ? "bg-green-600" : "bg-white border border-gray-200",
+          textClass: isSelected ? "text-white" : "text-gray-600",
+          iconColor: isSelected ? "white" : "#16A34A", // green-600
+        };
+      case "MAYBE":
+        return {
+          icon: "question" as const,
+          label: "Talvez",
+          bgClass: isSelected ? "bg-amber-500" : "bg-white border border-gray-200",
+          textClass: isSelected ? "text-white" : "text-gray-600",
+          iconColor: isSelected ? "white" : "#F59E0B", // amber-500
+        };
+      case "DECLINED":
+        return {
+          icon: "times" as const,
+          label: "Não vou",
+          bgClass: isSelected ? "bg-red-500" : "bg-white border border-gray-200",
+          textClass: isSelected ? "text-white" : "text-gray-600",
+          iconColor: isSelected ? "white" : "#EF4444", // red-500
+        };
+    }
+  };
+
+  const renderButton = (status: RSVPStatus) => {
+    const styles = getButtonStyles(status);
+    const isPending = pendingStatus === status;
 
     return (
       <TouchableOpacity
+        key={status}
         onPress={() => handleRsvpPress(status)}
         disabled={isLoading}
-        className={`flex-1 py-3 rounded-lg items-center justify-center mx-1 ${containerClasses}`}
+        activeOpacity={0.7}
+        className={`flex-1 py-3 px-1 rounded-xl items-center justify-center mx-1 flex-row ${styles.bgClass}`}
       >
-        {isLoading && isSelected ? (
-          <ActivityIndicator color="white" />
+        {isPending ? (
+          <ActivityIndicator color={styles.iconColor === "white" ? "white" : "#6B7280"} size="small" />
         ) : (
-          <Text className={`font-bold text-base ${textClasses}`}>{text}</Text>
+          <>
+            <FontAwesome name={styles.icon} size={14} color={styles.iconColor} />
+            <Text className={`font-[Inter_700Bold] text-sm ml-1.5 ${styles.textClass}`}>
+              {styles.label}
+            </Text>
+          </>
         )}
       </TouchableOpacity>
     );
   };
 
   return (
-    <View>
-      <Text className="text-2xl font-bold text-gray-900 font-[Inter_700Bold] mb-4">
-        Você vai participar?
-      </Text>
-      <View className="flex-row justify-between">
-        {renderButton("CONFIRMED", "Vou!")}
-        {renderButton("MAYBE", "Talvez")}
-        {renderButton("DECLINED", "Não vou")}
-      </View>
+    <View className="flex-row justify-between w-full">
+      {renderButton("CONFIRMED")}
+      {renderButton("MAYBE")}
+      {renderButton("DECLINED")}
     </View>
   );
 }

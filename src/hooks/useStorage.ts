@@ -38,7 +38,7 @@ export function useStorage() {
         return response.data.url;
       } catch (error) {
         console.error("Erro no upload da imagem via API:", error);
-        return null;
+        throw error;
       } finally {
         setIsUploading(false);
       }

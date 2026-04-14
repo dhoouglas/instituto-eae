@@ -53,16 +53,17 @@ type FilterSwitchProps = {
 };
 
 const FilterSwitch = ({ filter, setFilter }: FilterSwitchProps) => (
-  <View className="flex-row justify-center items-center bg-gray-200 rounded-full p-1 mb-4">
+  <View className="flex-row justify-center items-center bg-gray-100 rounded-full p-1.5 mb-6 mx-5 border border-gray-200/60">
     <TouchableOpacity
       onPress={() => setFilter("ALL")}
-      className={`px-4 py-2 rounded-full ${
-        filter === "ALL" ? "bg-green-logo" : ""
+      activeOpacity={0.7}
+      className={`flex-1 items-center py-2.5 rounded-full ${
+        filter === "ALL" ? "bg-green-700" : "border border-transparent"
       }`}
     >
       <Text
-        className={`font-bold ${
-          filter === "ALL" ? "text-white" : "text-gray-600"
+        className={`text-[13px] font-[Inter_700Bold] uppercase tracking-wider ${
+          filter === "ALL" ? "text-white" : "text-gray-500"
         }`}
       >
         Todos
@@ -70,13 +71,14 @@ const FilterSwitch = ({ filter, setFilter }: FilterSwitchProps) => (
     </TouchableOpacity>
     <TouchableOpacity
       onPress={() => setFilter("FAUNA")}
-      className={`px-4 py-2 rounded-full ${
-        filter === "FAUNA" ? "bg-green-logo" : ""
+      activeOpacity={0.7}
+      className={`flex-1 items-center py-2.5 rounded-full ${
+        filter === "FAUNA" ? "bg-green-700" : "border border-transparent"
       }`}
     >
       <Text
-        className={`font-bold ${
-          filter === "FAUNA" ? "text-white" : "text-gray-600"
+        className={`text-[13px] font-[Inter_700Bold] uppercase tracking-wider ${
+          filter === "FAUNA" ? "text-white" : "text-gray-500"
         }`}
       >
         Fauna
@@ -84,13 +86,14 @@ const FilterSwitch = ({ filter, setFilter }: FilterSwitchProps) => (
     </TouchableOpacity>
     <TouchableOpacity
       onPress={() => setFilter("FLORA")}
-      className={`px-4 py-2 rounded-full ${
-        filter === "FLORA" ? "bg-green-logo" : ""
+      activeOpacity={0.7}
+      className={`flex-1 items-center py-2.5 rounded-full ${
+        filter === "FLORA" ? "bg-green-700" : "border border-transparent"
       }`}
     >
       <Text
-        className={`font-bold ${
-          filter === "FLORA" ? "text-white" : "text-gray-600"
+        className={`text-[13px] font-[Inter_700Bold] uppercase tracking-wider ${
+          filter === "FLORA" ? "text-white" : "text-gray-500"
         }`}
       >
         Flora
@@ -117,40 +120,51 @@ const FaunaFloraCard = ({
   <TouchableOpacity
     onPress={onPress}
     activeOpacity={0.8}
-    className="bg-white rounded-xl shadow-sm mb-4 overflow-hidden border border-gray-100"
+    className="bg-white rounded-3xl mb-5 border border-gray-100 overflow-hidden mx-5"
+    style={{ elevation: 2, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8 }}
   >
     {item.imageUrls && item.imageUrls.length > 0 ? (
       <Image
         source={{ uri: item.imageUrls[0] }}
-        className="w-full h-40"
+        className="w-full h-48"
         resizeMode="cover"
       />
     ) : (
-      <View className="w-full h-40 bg-gray-200 items-center justify-center">
-        <FontAwesome name="image" size={40} color="#9CA3AF" />
+      <View className="w-full h-48 bg-green-50 items-center justify-center">
+        <FontAwesome name="leaf" size={40} color="#166534" opacity={0.3} />
       </View>
     )}
-    <View className="p-4">
-      <Text className="text-xs font-bold text-green-logo uppercase">
-        {item.type?.toUpperCase() === "FAUNA" ? "Fauna" : "Flora"}
-      </Text>
-      <Text className="text-lg font-bold text-gray-800 mt-1" numberOfLines={2}>
+    <View className="p-5">
+      <View className="flex-row justify-between items-start mb-2">
+        <View className="bg-green-100 px-3 py-1.5 rounded-full">
+          <Text className="text-[10px] font-[Inter_800ExtraBold] text-green-800 uppercase tracking-wider">
+            {item.type?.toUpperCase() === "FAUNA" ? "Fauna" : "Flora"}
+          </Text>
+        </View>
+      </View>
+      <Text className="text-xl font-[Inter_800ExtraBold] text-gray-900 leading-tight" numberOfLines={2}>
         {item.name}
       </Text>
+      <View className="flex-row items-center mt-3">
+        <Text className="text-sm font-[Inter_600SemiBold] text-green-700">Ver detalhes</Text>
+        <FontAwesome name="angle-right" size={14} color="#15803D" style={{ marginLeft: 4, marginTop: 2 }} />
+      </View>
     </View>
     {isAdmin && (
-      <View className="absolute bottom-3 right-3 flex-row gap-1 z-10">
+      <View className="absolute top-4 right-4 flex-row gap-2 z-10">
         <TouchableOpacity
           onPress={onEdit}
-          className="bg-green-800/80 w-8 h-8 rounded-lg items-center justify-center shadow"
+          className="bg-white/90 w-10 h-10 rounded-full items-center justify-center"
+          style={{ elevation: 3 }}
         >
-          <FontAwesome name="pencil" size={16} color="white" />
+          <FontAwesome name="pencil" size={16} color="#374151" />
         </TouchableOpacity>
         <TouchableOpacity
           onPress={onDelete}
-          className="bg-green-800/80 w-8 h-8 rounded-lg items-center justify-center shadow"
+          className="bg-white/90 w-10 h-10 rounded-full items-center justify-center"
+          style={{ elevation: 3 }}
         >
-          <FontAwesome name="trash" size={16} color="white" />
+          <FontAwesome name="trash" size={16} color="#EF4444" />
         </TouchableOpacity>
       </View>
     )}
@@ -303,9 +317,8 @@ export function FaunaFloraListScreen() {
           }
           contentContainerStyle={{
             flexGrow: 1,
-            paddingTop: 6,
-            paddingHorizontal: 24,
-            paddingBottom: 90,
+            paddingTop: 10,
+            paddingBottom: 100,
           }}
           refreshing={isLoading}
           onRefresh={fetchItems}
@@ -321,10 +334,12 @@ export function FaunaFloraListScreen() {
         {isAdmin && (
           <TouchableOpacity
             onPress={() => navigation.navigate("createFaunaFlora")}
-            className="absolute bottom-8 right-6 bg-green-logo w-16 h-16 rounded-full items-center justify-center shadow-lg"
+            className="absolute bottom-8 right-6 bg-green-700 h-14 rounded-full flex-row items-center justify-center px-6"
+            style={{ elevation: 5, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4 }}
             activeOpacity={0.8}
           >
-            <FontAwesome name="plus" size={24} color="white" />
+            <FontAwesome name="plus" size={16} color="white" />
+            <Text className="text-white font-[Inter_700Bold] ml-2">Nova Espécie</Text>
           </TouchableOpacity>
         )}
       </View>

@@ -8,6 +8,7 @@ import {
   Platform,
   StatusBar,
   TouchableOpacity,
+  Dimensions,
 } from "react-native";
 import api from "@/lib/api";
 import { NewsStackScreenProps } from "@/routes/types";
@@ -25,17 +26,20 @@ type NewsDetails = {
 
 type Props = NewsStackScreenProps<"newsDetail">;
 
+const { height: screenHeight } = Dimensions.get("window");
+
 const DetailsSkeleton = () => (
-  <View className="flex-1">
-    <View className="w-full h-64 bg-gray-200" />
-    <View className="p-6">
+  <View className="flex-1 bg-white">
+    <View className="w-full h-80 bg-gray-200" />
+    <View className="p-6 bg-white -mt-6 rounded-t-3xl h-full">
       <View className="h-4 w-1/4 bg-gray-200 rounded" />
-      <View className="h-8 w-3/4 bg-gray-200 rounded mt-2" />
-      <View className="h-4 w-1/2 bg-gray-200 rounded mt-2" />
+      <View className="h-8 w-3/4 bg-gray-200 rounded mt-4" />
+      <View className="h-4 w-1/2 bg-gray-200 rounded mt-4" />
       <View className="w-16 h-1 bg-gray-200 my-6" />
       <View className="h-4 w-full bg-gray-200 rounded mt-2" />
-      <View className="h-4 w-full bg-gray-200 rounded mt-2" />
-      <View className="h-4 w-5/6 bg-gray-200 rounded mt-2" />
+      <View className="h-4 w-full bg-gray-200 rounded mt-3" />
+      <View className="h-4 w-5/6 bg-gray-200 rounded mt-3" />
+      <View className="h-4 w-full bg-gray-200 rounded mt-3" />
     </View>
   </View>
 );
@@ -73,47 +77,68 @@ export function NewsDetailsScreen({ route, navigation }: Props) {
 
     if (fetchError) {
       return (
-        <View className="flex-1 justify-center items-center p-6">
-          <Text className="text-lg text-red-500 text-center mb-4">
+        <View className="flex-1 justify-center items-center p-6 bg-white">
+          <FontAwesome name="exclamation-triangle" size={40} color="#EF4444" className="mb-4" />
+          <Text className="text-lg text-gray-800 text-center mt-4 mb-6 font-[Inter_500Medium]">
             {fetchError}
           </Text>
-          <Button title="Tentar Novamente" onPress={fetchPostDetails} />
+          <Button title="Tentar Novamente" onPress={fetchPostDetails} className="w-full bg-green-700" />
         </View>
       );
     }
 
     if (!post) {
       return (
-        <View className="flex-1 justify-center items-center">
-          <Text className="text-lg text-gray-500">Notícia não encontrada.</Text>
+        <View className="flex-1 justify-center items-center bg-white">
+          <FontAwesome name="newspaper-o" size={40} color="#9CA3AF" />
+          <Text className="text-lg text-gray-500 font-[Inter_500Medium] mt-4">Notícia não encontrada.</Text>
         </View>
       );
     }
 
     return (
-      <ScrollView>
-        {post.imageUrl && (
-          <Image
-            source={{ uri: post.imageUrl }}
-            className="w-full h-64"
-            resizeMode="cover"
-          />
-        )}
-        <View className="p-6">
-          <Text className="text-sm font-bold text-green-logo uppercase">
-            {post.category}
-          </Text>
-          <Text className="text-3xl font-bold text-gray-900 mt-1 font-[Inter_700Bold]">
+      <ScrollView showsVerticalScrollIndicator={false} bounces={false} className="bg-white">
+        <View style={{ height: screenHeight * 0.4 }}>
+          {post.imageUrl ? (
+            <Image
+              source={{ uri: post.imageUrl }}
+              className="w-full h-full"
+              resizeMode="cover"
+            />
+          ) : (
+            <View className="w-full h-full bg-green-50 items-center justify-center pt-10">
+               <FontAwesome name="newspaper-o" size={60} color="#166534" opacity={0.5} />
+            </View>
+          )}
+          <View className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black/60 to-transparent" />
+        </View>
+        
+        <View className="bg-white -mt-8 rounded-t-[32px] pt-8 px-6 pb-20">
+          <View className="flex-row items-center mb-4">
+            <View className="bg-green-100 px-3 py-1.5 rounded-full mr-3">
+              <Text className="text-xs font-[Inter_800ExtraBold] text-green-800 uppercase tracking-wider">
+                {post.category}
+              </Text>
+            </View>
+            <View className="flex-row items-center flex-1">
+              <FontAwesome name="clock-o" size={14} color="#6B7280" />
+              <Text className="text-xs text-gray-500 font-[Inter_500Medium] ml-1.5">
+                {new Date(post.createdAt).toLocaleDateString("pt-BR", {
+                  day: "2-digit",
+                  month: "long",
+                  year: "numeric"
+                })}
+              </Text>
+            </View>
+          </View>
+
+          <Text className="text-3xl text-gray-900 leading-tight font-[Inter_800ExtraBold] tracking-tight">
             {post.title}
           </Text>
-          <Text className="text-sm text-gray-500 mt-2">
-            Publicado em{" "}
-            {new Date(post.createdAt).toLocaleDateString("pt-BR", {
-              dateStyle: "long",
-            })}
-          </Text>
-          <View className="w-16 h-1 bg-green-logo my-6" />
-          <Text className="text-lg text-gray-700 leading-relaxed font-[Inter_400Regular]">
+          
+          <View className="w-12 h-1.5 bg-green-600 rounded-full my-6" />
+          
+          <Text className="text-[17px] text-gray-700 leading-relaxed font-[Inter_400Regular]">
             {post.content}
           </Text>
         </View>
@@ -122,23 +147,22 @@ export function NewsDetailsScreen({ route, navigation }: Props) {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <View
-        style={{
-          flex: 1,
-        }}
-      >
-        {renderContent()}
+    <View className="flex-1 bg-white">
+      <StatusBar translucent backgroundColor="transparent" barStyle={isLoading || !post?.imageUrl ? "dark-content" : "light-content"} />
+      
+      {renderContent()}
+
+      <SafeAreaView className="absolute top-0 left-0 w-full" pointerEvents="box-none">
         <TouchableOpacity
           onPress={() => navigation.goBack()}
-          className="absolute top-4 left-4 bg-black/20 w-10 h-10 rounded-full items-center justify-center"
+          className="ml-4 mt-2 w-10 h-10 rounded-full items-center justify-center bg-white/30 backdrop-blur-md border border-white/40"
           style={{
-            marginTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+            marginTop: Platform.OS === "android" ? (StatusBar.currentHeight || 24) + 10 : 10,
           }}
         >
-          <FontAwesome name="arrow-left" size={20} color="white" />
+          <FontAwesome name="angle-left" size={24} color={isLoading || !post?.imageUrl ? "#374151" : "white"} style={{ marginRight: 2 }} />
         </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }

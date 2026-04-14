@@ -75,8 +75,8 @@ export function EditProfile({
         >
           <Header title="Editar Perfil" showBackButton />
 
-          <View className="bg-white p-6 rounded-xl shadow-sm">
-            <Text className="text-lg font-semibold text-gray-600 mb-1">
+          <View className="bg-white p-6 rounded-2xl border border-gray-100 mt-4">
+            <Text className="text-sm font-[Inter_700Bold] text-gray-700 mb-2 uppercase tracking-wider">
               Nome
             </Text>
             <Input
@@ -86,10 +86,10 @@ export function EditProfile({
               placeholder="Seu nome"
               value={firstName}
               onChangeText={setFirstName}
-              className="mb-4"
+              className="mb-5"
             />
 
-            <Text className="text-lg font-semibold text-gray-600 mb-1">
+            <Text className="text-sm font-[Inter_700Bold] text-gray-700 mb-2 uppercase tracking-wider">
               Sobrenome
             </Text>
             <Input
@@ -99,19 +99,19 @@ export function EditProfile({
               placeholder="Seu sobrenome"
               value={lastName}
               onChangeText={setLastName}
-              className="mb-6"
+              className="mb-5"
             />
 
-            <Text className="text-lg font-semibold text-gray-600 mb-1">
+            <Text className="text-sm font-[Inter_700Bold] text-gray-700 mb-2 uppercase tracking-wider">
               E-mail
             </Text>
             <Input
               placeholder="Seu e-mail"
               value={user?.primaryEmailAddress?.emailAddress}
               editable={false}
-              className="bg-gray-200 text-gray-500"
+              className="bg-gray-100 text-gray-500"
             />
-            <Text className="text-xs text-gray-400 mt-1 px-1">
+            <Text className="text-xs font-[Inter_500Medium] text-gray-400 mt-2 px-1">
               O e-mail não pode ser alterado.
             </Text>
           </View>
@@ -121,8 +121,9 @@ export function EditProfile({
               title="Salvar Alterações"
               onPress={handleSave}
               isLoading={isLoading}
-              className="bg-green-logo py-4 rounded-xl items-center justify-center"
-              textClassName="text-white font-bold text-lg"
+              className="bg-green-700 h-14 rounded-full items-center justify-center"
+              textClassName="text-white font-[Inter_700Bold] text-lg"
+              style={{ elevation: 2, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 }}
             />
           </View>
         </View>

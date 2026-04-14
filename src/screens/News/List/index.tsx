@@ -6,6 +6,7 @@ import {
   FlatList,
   TouchableOpacity,
   Image,
+  ImageBackground,
   ListRenderItem,
   Alert,
   Platform,
@@ -28,21 +29,99 @@ type NewsPost = {
   title: string;
   category: string;
   imageUrl: string | null;
+  createdAt: string | Date;
 };
 
 type NewsNavigationProp = StackNavigationProp<NewsStackParamList, "newsList">;
 
-const NewsCardSkeleton = () => (
-  <View className="bg-white rounded-xl shadow-sm mb-4 overflow-hidden border border-gray-100">
-    <View className="w-full h-40 bg-gray-200" />
-    <View className="p-4">
-      <View className="h-4 w-1/4 bg-gray-200 rounded" />
-      <View className="h-6 w-3/4 bg-gray-200 rounded mt-2" />
+// --- SKELETONS ---
+const HeroSkeleton = () => (
+  <View className="bg-gray-200 rounded-3xl h-64 mb-6 shadow-sm mx-5 mt-4 border border-gray-100" />
+);
+
+const HorizontalSkeleton = () => (
+  <View className="bg-white rounded-2xl shadow-sm mb-4 border border-gray-100 flex-row overflow-hidden h-28 mx-5">
+    <View className="w-28 h-full bg-gray-200" />
+    <View className="flex-1 p-3 justify-between">
+      <View className="h-3 w-1/3 bg-gray-200 rounded mb-2" />
+      <View className="h-4 w-full bg-gray-200 rounded mb-1" />
+      <View className="h-4 w-2/3 bg-gray-200 rounded" />
+      <View className="h-3 w-1/4 bg-gray-200 rounded mt-auto" />
     </View>
   </View>
 );
 
-const NewsCard = ({
+// --- CARDS ---
+
+// Card 1: Destaque (Hero)
+const HeroNewsCard = ({
+  item,
+  isAdmin,
+  onEdit,
+  onDelete,
+  onPress,
+}: {
+  item: NewsPost;
+  isAdmin: boolean;
+  onPress: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}) => (
+  <TouchableOpacity
+    onPress={onPress}
+    activeOpacity={0.9}
+    className="mx-5 mt-4 mb-6"
+  >
+    <ImageBackground
+      source={item.imageUrl ? { uri: item.imageUrl } : require("@/assets/reforestation.svg")}
+      className="h-64 w-full rounded-3xl overflow-hidden justify-end p-5 shadow-sm"
+      resizeMode="cover"
+    >
+      <View className="absolute top-0 left-0 right-0 bottom-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent bg-black/40" />
+      
+      <View className="absolute top-4 left-4 bg-green-600 px-3 py-1 rounded-full">
+        <Text className="text-white text-[10px] font-[Inter_800ExtraBold] uppercase tracking-wider">
+          Destaque
+        </Text>
+      </View>
+
+      {isAdmin && (
+        <View className="absolute top-4 right-4 flex-row gap-2 z-10">
+          <TouchableOpacity
+            onPress={onEdit}
+            className="bg-white/20 backdrop-blur-md w-8 h-8 rounded-full items-center justify-center border border-white/30"
+          >
+            <FontAwesome name="pencil" size={14} color="white" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={onDelete}
+            className="bg-red-500/80 backdrop-blur-md w-8 h-8 rounded-full items-center justify-center border border-white/30"
+          >
+            <FontAwesome name="trash" size={14} color="white" />
+          </TouchableOpacity>
+        </View>
+      )}
+
+      <View>
+        <Text className="text-green-400 text-xs font-[Inter_800ExtraBold] uppercase tracking-wider mb-1.5">
+          {item.category}
+        </Text>
+        <Text
+          className="text-white text-2xl font-[Inter_800ExtraBold] leading-tight"
+          numberOfLines={3}
+        >
+          {item.title}
+        </Text>
+        <Text className="text-gray-300 text-xs font-[Inter_500Medium] mt-2">
+          {new Date(item.createdAt || new Date()).toLocaleDateString("pt-BR")}
+        </Text>
+      </View>
+    </ImageBackground>
+  </TouchableOpacity>
+);
+
+// Card 2..N: Horizontal Compacto
+const HorizontalNewsCard = ({
   item,
   isAdmin,
   onEdit,
@@ -58,44 +137,51 @@ const NewsCard = ({
   <TouchableOpacity
     onPress={onPress}
     activeOpacity={0.8}
-    className="bg-white rounded-xl shadow-sm mb-4 overflow-hidden border border-gray-100"
+    className="bg-white rounded-2xl shadow-sm mb-4 border border-gray-100 flex-row overflow-hidden h-32 mx-5"
   >
-    {item.imageUrl ? (
-      <Image
-        source={{ uri: item.imageUrl }}
-        className="w-full h-40"
-        resizeMode="cover"
-      />
-    ) : (
-      <View className="w-full h-40 bg-gray-200 items-center justify-center">
-        <FontAwesome name="image" size={40} color="#9CA3AF" />
-      </View>
-    )}
-    <View className="p-4">
-      <Text className="text-xs font-bold text-green-logo uppercase">
-        {item.category}
-      </Text>
-      <Text className="text-lg font-bold text-gray-800 mt-1" numberOfLines={2}>
-        {item.title}
-      </Text>
+    <View className="w-32 h-full bg-gray-100">
+      {item.imageUrl ? (
+        <Image
+          source={{ uri: item.imageUrl }}
+          className="w-full h-full"
+          resizeMode="cover"
+        />
+      ) : (
+        <View className="w-full h-full items-center justify-center bg-green-50">
+          <FontAwesome name="newspaper-o" size={28} color="#166534" />
+        </View>
+      )}
     </View>
-    {isAdmin && (
-      <View className="absolute bottom-3 right-3 flex-row gap-1 z-10">
-        <TouchableOpacity
-          onPress={onEdit}
-          className="bg-green-800/80 w-8 h-8 rounded-lg items-center justify-center shadow"
+    <View className="flex-1 p-3.5 justify-between">
+      <View>
+        <Text className="text-[10px] font-[Inter_800ExtraBold] text-green-700 uppercase tracking-wider mb-1">
+          {item.category}
+        </Text>
+        <Text
+          className="text-base text-gray-800 font-[Inter_700Bold] leading-snug"
+          numberOfLines={2}
         >
-          <FontAwesome name="pencil" size={16} color="white" />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={onDelete}
-          className="bg-green-800/80 w-8 h-8 rounded-lg items-center justify-center shadow"
-        >
-          <FontAwesome name="trash" size={16} color="white" />
-        </TouchableOpacity>
+          {item.title}
+        </Text>
       </View>
-    )}
+      
+      <View className="flex-row items-center justify-between mt-2">
+        <Text className="text-[11px] text-gray-500 font-[Inter_500Medium]">
+          {new Date(item.createdAt || new Date()).toLocaleDateString("pt-BR")}
+        </Text>
+        
+        {isAdmin && (
+          <View className="flex-row gap-2">
+            <TouchableOpacity onPress={onEdit} className="p-1">
+              <FontAwesome name="pencil" size={14} color="#4B5563" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={onDelete} className="p-1">
+              <FontAwesome name="trash" size={14} color="#EF4444" />
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
+    </View>
   </TouchableOpacity>
 );
 
@@ -158,23 +244,40 @@ export function NewsListScreen() {
     );
   };
 
-  const renderNewsItem: ListRenderItem<NewsPost> = ({ item }) => (
-    <NewsCard
-      item={item}
-      isAdmin={isAdmin}
-      onPress={() => navigation.navigate("newsDetail", { newsId: item.id })}
-      onEdit={() => navigation.navigate("editNews", { newsId: item.id })}
-      onDelete={() => confirmDelete(item.id)}
-    />
-  );
+  const renderNewsItem: ListRenderItem<NewsPost> = ({ item, index }) => {
+    // A primeira notícia vira o destaque (Hero)
+    if (index === 0) {
+      return (
+        <HeroNewsCard
+          item={item}
+          isAdmin={isAdmin}
+          onPress={() => navigation.navigate("newsDetail", { newsId: item.id })}
+          onEdit={() => navigation.navigate("editNews", { newsId: item.id })}
+          onDelete={() => confirmDelete(item.id)}
+        />
+      );
+    }
+
+    // As demais são horizontais
+    return (
+      <HorizontalNewsCard
+        item={item}
+        isAdmin={isAdmin}
+        onPress={() => navigation.navigate("newsDetail", { newsId: item.id })}
+        onEdit={() => navigation.navigate("editNews", { newsId: item.id })}
+        onDelete={() => confirmDelete(item.id)}
+      />
+    );
+  };
 
   const renderContent = () => {
     if (isLoading && news.length === 0) {
       return (
-        <View style={{ paddingHorizontal: 24, paddingTop: 6 }}>
-          <NewsCardSkeleton />
-          <NewsCardSkeleton />
-          <NewsCardSkeleton />
+        <View style={{ paddingTop: 6 }}>
+          <HeroSkeleton />
+          <HorizontalSkeleton />
+          <HorizontalSkeleton />
+          <HorizontalSkeleton />
         </View>
       );
     }
@@ -182,7 +285,7 @@ export function NewsListScreen() {
     if (fetchError) {
       return (
         <View className="flex-1 justify-center items-center p-6">
-          <Text className="text-lg text-red-500 text-center mb-4">
+          <Text className="text-lg text-red-500 text-center mb-4 font-[Inter_500Medium]">
             {fetchError}
           </Text>
           <Button title="Tentar Novamente" onPress={fetchNews} />
@@ -198,15 +301,23 @@ export function NewsListScreen() {
         contentContainerStyle={{
           flexGrow: 1,
           paddingTop: 6,
-          paddingHorizontal: 24,
-          paddingBottom: 90,
+          paddingBottom: 100,
         }}
         refreshing={isLoading}
         onRefresh={fetchNews}
+        showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           !isLoading ? (
-            <View className="flex-1 justify-center items-center">
-              <Text className="text-gray-500">Nenhuma notícia encontrada.</Text>
+            <View className="flex-1 justify-center items-center px-8 mt-20">
+              <View className="w-24 h-24 bg-green-50 rounded-full items-center justify-center mb-4">
+                <FontAwesome name="newspaper-o" size={40} color="#166534" />
+              </View>
+              <Text className="text-gray-800 text-xl font-[Inter_700Bold] text-center mb-2">
+                Nenhuma notícia
+              </Text>
+              <Text className="text-gray-500 text-center font-[Inter_400Regular]">
+                Fique de olho, em breve publicaremos novidades do instituto.
+              </Text>
             </View>
           ) : null
         }
@@ -222,17 +333,20 @@ export function NewsListScreen() {
           flex: 1,
         }}
       >
-        <Header title="Últimas Notícias" showBackButton={true} />
+        <Header title="Notícias" showBackButton={true} />
 
         {renderContent()}
 
         {isAdmin && (
           <TouchableOpacity
             onPress={() => navigation.navigate("createNews")}
-            className="absolute bottom-8 right-6 bg-green-logo w-16 h-16 rounded-full items-center justify-center shadow-lg"
-            activeOpacity={0.8}
+            className="absolute bottom-6 right-5 bg-green-700 h-14 rounded-full flex-row items-center justify-center shadow-lg px-6 shadow-black/30"
+            activeOpacity={0.9}
           >
-            <FontAwesome name="plus" size={24} color="white" />
+            <FontAwesome name="plus" size={18} color="white" />
+            <Text className="text-white font-[Inter_700Bold] ml-2 text-base">
+              Nova Notícia
+            </Text>
           </TouchableOpacity>
         )}
       </View>
