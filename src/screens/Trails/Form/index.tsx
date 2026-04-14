@@ -95,10 +95,18 @@ export function TrailForm() {
     trailId,
     coordinates: draftPath,
     waypointOrders: draftWaypointOrders,
+    waypointsData: draftWaypointsData,
+    distance: draftDistance,
+    estimatedTime: draftEstimatedTime,
+    elevationGain: draftElevationGain,
   } = (route.params as {
     trailId?: string;
     coordinates?: { latitude: number; longitude: number; order: number }[];
     waypointOrders?: number[];
+    waypointsData?: Record<number, { name: string; description: string }>;
+    distance?: number;
+    estimatedTime?: number;
+    elevationGain?: number;
   }) || {};
   const isEditing = !!trailId;
 
@@ -123,14 +131,19 @@ export function TrailForm() {
     ) {
       const initialWaypoints = draftWaypointOrders.reduce(
         (acc, order) => {
-          acc[order] = { ...EMPTY_WAYPOINT_DATA };
+          const prefill = draftWaypointsData?.[order];
+          acc[order] = { 
+            ...EMPTY_WAYPOINT_DATA, 
+            name: prefill?.name || "", 
+            description: prefill?.description || "" 
+          };
           return acc;
         },
         {} as Record<number, WaypointFormData>
       );
       waypointsDataRef.current = initialWaypoints;
     }
-  }, [draftWaypointOrders]);
+  }, [draftWaypointOrders, draftWaypointsData]);
 
   const handleWaypointChange = useCallback(
     (order: number, data: WaypointFormData) => {
@@ -194,9 +207,9 @@ export function TrailForm() {
     defaultValues: {
       name: "",
       description: "",
-      distance: undefined,
-      estimatedTime: undefined,
-      elevationGain: undefined,
+      distance: draftDistance !== undefined ? draftDistance : undefined,
+      estimatedTime: draftEstimatedTime !== undefined ? draftEstimatedTime : undefined,
+      elevationGain: draftElevationGain !== undefined ? draftElevationGain : undefined,
       difficulty: "FACIL",
       type: "CAMINHADA",
       status: "ABERTA",
@@ -327,8 +340,8 @@ export function TrailForm() {
           return {
             id: waypointData.id,
             name: waypointData.name,
-            description: waypointData.description,
-            imageUrl: waypointImageUrl,
+            description: waypointData.description || undefined,
+            imageUrl: waypointImageUrl || undefined,
             order: order, // O backend exige que order = coordinate.order
           };
         })

@@ -129,27 +129,11 @@ export function TrailMap({
                   latitude: waypoint.latitude,
                   longitude: waypoint.longitude,
                 }}
-                title={waypoint.name}
+                pinColor="gold"
+                title={waypoint.name || `Ponto de Interesse #${waypoint.order}`}
                 description={waypoint.description}
                 onPress={() => onWaypointPress?.(waypoint)}
-                anchor={{ x: 0.5, y: 1 }}
-                tracksViewChanges={false}
-              >
-                <View className="items-center justify-center">
-                  <FontAwesome
-                    name="map-marker"
-                    size={40}
-                    color="#FFC107"
-                    style={styles.waypointIcon}
-                  />
-                  <Text
-                    className="absolute top-[6px] text-xs font-bold text-white"
-                    style={styles.waypointOrderText}
-                  >
-                    {waypoint.order}
-                  </Text>
-                </View>
-              </Marker>
+              />
             );
           }
           return null;
@@ -161,38 +145,14 @@ export function TrailMap({
             <Marker
               coordinate={coordinates[0]}
               title="Início da Trilha"
-              anchor={{ x: 0.5, y: 1 }}
-              tracksViewChanges={false}
-            >
-              <View className="items-center">
-                <View className="h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-[#10B981] shadow-lg shadow-black">
-                  <FontAwesome name="play" size={16} color="white" />
-                </View>
-                <View
-                  style={[styles.markerPin, { borderTopColor: "#10B981" }]}
-                />
-              </View>
-            </Marker>
+              pinColor="green"
+            />
             {coordinates.length > 1 && (
               <Marker
                 coordinate={coordinates[coordinates.length - 1]}
                 title="Fim da Trilha"
-                anchor={{ x: 0.5, y: 1 }}
-                tracksViewChanges={false}
-              >
-                <View className="items-center">
-                  <View className="h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-[#000000] shadow-lg shadow-black">
-                    <FontAwesome
-                      name="flag-checkered"
-                      size={16}
-                      color="white"
-                    />
-                  </View>
-                  <View
-                    style={[styles.markerPin, { borderTopColor: "#000000" }]}
-                  />
-                </View>
-              </Marker>
+                pinColor="black"
+              />
             )}
           </>
         )}

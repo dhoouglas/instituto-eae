@@ -66,10 +66,26 @@ export function FollowTrailMap({
   );
   const [isOnTrack, setIsOnTrack] = useState(true);
   const [showOffTrackBanner, setShowOffTrackBanner] = useState(false);
+  const [showFarFromStartBanner, setShowFarFromStartBanner] = useState(false);
+  const [userPath, setUserPath] = useState<Coordinate[]>([]);
   const hasGoneOffTrack = useRef(false);
+  const hasReachedTrail = useRef(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const mapRef = useRef<MapView>(null);
+
+  const getDistance = (p1: Coordinate, p2: Coordinate) => {
+    const R = 6371e3;
+    const φ1 = (p1.latitude * Math.PI) / 180;
+    const φ2 = (p2.latitude * Math.PI) / 180;
+    const Δφ = ((p2.latitude - p1.latitude) * Math.PI) / 180;
+    const Δλ = ((p2.longitude - p1.longitude) * Math.PI) / 180;
+    const a =
+      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
 
   // Finish trail proximity check
   useEffect(() => {
@@ -195,24 +211,31 @@ export function FollowTrailMap({
     });
   }, [userLocation, waypoints, isStarted, visitedWaypoints]);
 
+  // User path tracking
+  useEffect(() => {
+    if (isStarted && !isPaused && userLocation) {
+      const newCoord = {
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude,
+      };
+
+      setUserPath((prev) => {
+        if (prev.length === 0) return [newCoord];
+        const lastCoord = prev[prev.length - 1];
+        const dist = getDistance(lastCoord, newCoord);
+        if (dist > 2) {
+          return [...prev, newCoord];
+        }
+        return prev;
+      });
+    }
+  }, [userLocation, isStarted, isPaused]);
+
   // Check if user is on the trail path
   useEffect(() => {
     if (!userLocation || !isStarted || coordinates.length < 2) return;
 
-    const threshold = 10; // 10 meters tolerance
-
-    const getDistance = (p1: Coordinate, p2: Coordinate) => {
-      const R = 6371e3;
-      const φ1 = (p1.latitude * Math.PI) / 180;
-      const φ2 = (p2.latitude * Math.PI) / 180;
-      const Δφ = ((p2.latitude - p1.latitude) * Math.PI) / 180;
-      const Δλ = ((p2.longitude - p1.longitude) * Math.PI) / 180;
-      const a =
-        Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-        Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      return R * c;
-    };
+    const threshold = 20; // 20 meters tolerance
 
     const pointToLineSegmentDistance = (
       p: Location.LocationObjectCoords,
@@ -250,17 +273,41 @@ export function FollowTrailMap({
     const currentlyOnTrack = minDistance < threshold;
     setIsOnTrack(currentlyOnTrack);
 
+    if (currentlyOnTrack) {
+      hasReachedTrail.current = true;
+    }
+
     if (isStarted) {
-      if (!currentlyOnTrack && !hasGoneOffTrack.current) {
-        setShowOffTrackBanner(true);
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-        hasGoneOffTrack.current = true;
-      } else if (currentlyOnTrack) {
+      if (currentlyOnTrack) {
         setShowOffTrackBanner(false);
+        setShowFarFromStartBanner(false);
         hasGoneOffTrack.current = false;
+      } else {
+        if (!hasReachedTrail.current) {
+          const startDistance = getDistance(
+            { latitude: userLocation.latitude, longitude: userLocation.longitude },
+            coordinates[0]
+          );
+          if (startDistance > 50) {
+            setShowFarFromStartBanner(true);
+            setShowOffTrackBanner(false);
+          } else {
+            setShowFarFromStartBanner(false);
+            setShowOffTrackBanner(false);
+          }
+        } else {
+          setShowFarFromStartBanner(false);
+          if (!hasGoneOffTrack.current) {
+            setShowOffTrackBanner(true);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+            hasGoneOffTrack.current = true;
+          }
+        }
       }
     } else {
       setShowOffTrackBanner(false);
+      setShowFarFromStartBanner(false);
+      hasReachedTrail.current = false;
     }
   }, [userLocation, coordinates, isStarted]);
 
@@ -288,7 +335,17 @@ export function FollowTrailMap({
 
   const handleStart = () => {
     onStart();
-    if (mapRef.current && coordinates.length > 0) {
+    if (userLocation && mapRef.current) {
+      mapRef.current.animateToRegion(
+        {
+          latitude: userLocation.latitude,
+          longitude: userLocation.longitude,
+          latitudeDelta: 0.002,
+          longitudeDelta: 0.002,
+        },
+        1000
+      );
+    } else if (coordinates.length > 0 && mapRef.current) {
       mapRef.current.animateToRegion(
         {
           latitude: coordinates[0].latitude,
@@ -345,49 +402,33 @@ export function FollowTrailMap({
       >
         <Polyline
           coordinates={coordinates}
-          strokeColor={
-            isStarted ? (isOnTrack ? "#10B981" : "#ef4444") : "#FF6347"
-          }
+          strokeColor="#FF6347"
           strokeWidth={5}
+          zIndex={1}
         />
+
+        {userPath.length > 0 && (
+          <Polyline
+            coordinates={userPath}
+            strokeColor={isOnTrack ? "#10B981" : "#ef4444"}
+            strokeWidth={6}
+            zIndex={2}
+          />
+        )}
 
         {coordinates.length > 0 && (
           <>
             <Marker
               coordinate={coordinates[0]}
               title="Início da Trilha"
-              anchor={{ x: 0.5, y: 1 }}
-              tracksViewChanges={false}
-            >
-              <View className="items-center">
-                <View className="h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-green-500 shadow-lg shadow-black">
-                  <FontAwesome name="play" size={16} color="white" />
-                </View>
-                <View
-                  style={[styles.markerPin, { borderTopColor: "#10B981" }]}
-                />
-              </View>
-            </Marker>
+              pinColor="green"
+            />
             {coordinates.length > 1 && (
               <Marker
                 coordinate={coordinates[coordinates.length - 1]}
                 title="Fim da Trilha"
-                anchor={{ x: 0.5, y: 1 }}
-                tracksViewChanges={false}
-              >
-                <View className="items-center">
-                  <View className="h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-black shadow-lg shadow-black">
-                    <FontAwesome
-                      name="flag-checkered"
-                      size={16}
-                      color="white"
-                    />
-                  </View>
-                  <View
-                    style={[styles.markerPin, { borderTopColor: "#000000" }]}
-                  />
-                </View>
-              </Marker>
+                pinColor="black"
+              />
             )}
           </>
         )}
@@ -402,25 +443,8 @@ export function FollowTrailMap({
             title={waypoint.name}
             description={waypoint.description}
             onPress={() => setSelectedWaypoint(waypoint)}
-            tracksViewChanges={false}
-          >
-            <View className="items-center justify-center">
-              <FontAwesome
-                name="map-marker"
-                size={40}
-                color={
-                  visitedWaypoints.has(waypoint.id) ? "#FF6347" : "#FFC107"
-                }
-                style={styles.waypointIcon}
-              />
-              <Text
-                className="absolute top-[6px] text-xs font-bold text-white"
-                style={styles.waypointOrderText}
-              >
-                {waypoint.order}
-              </Text>
-            </View>
-          </Marker>
+            pinColor={visitedWaypoints.has(waypoint.id) ? "tomato" : "gold"}
+          />
         ))}
       </MapView>
 
@@ -429,6 +453,15 @@ export function FollowTrailMap({
           <FontAwesome name="warning" size={24} color="white" />
           <Text className="ml-2.5 text-base font-bold text-white">
             Você está saindo da rota!
+          </Text>
+        </View>
+      )}
+
+      {showFarFromStartBanner && (
+        <View className="absolute left-0 right-0 top-0 flex-row items-center justify-center bg-orange-500 p-3 shadow-lg shadow-black">
+          <FontAwesome name="warning" size={24} color="white" />
+          <Text className="ml-2.5 text-base font-bold text-white text-center flex-1">
+            Você está muito longe do início da trilha!
           </Text>
         </View>
       )}

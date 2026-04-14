@@ -14,7 +14,6 @@ import * as Location from "expo-location";
 import { AppNavigatorRoutesProps, TrailStackParamList } from "@/routes/types";
 import { Header } from "@/components/Header";
 import { FollowTrailMap } from "@/components/FollowTrailMap";
-import { useTrailSimulator } from "@/hooks/useTrailSimulator";
 import { useLocation } from "@/hooks/useLocation";
 import api from "@/lib/api";
 
@@ -50,7 +49,6 @@ export function FollowTrailScreen() {
     useState<Location.LocationObjectCoords | null>(null);
   const [isStarted, setIsStarted] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [useSimulator, setUseSimulator] = useState(false); // GPS físico
 
   const handleLocationUpdate = useCallback(
     (location: Location.LocationObject) => {
@@ -60,35 +58,17 @@ export function FollowTrailScreen() {
   );
 
   useLocation({
-    enabled: isStarted && !isPaused && !useSimulator,
+    enabled: isStarted && !isPaused,
     onLocationUpdate: handleLocationUpdate,
     onError: (error) => {
       Alert.alert("Erro de Localização", error);
     },
   });
 
-  useTrailSimulator(
-    {
-      enabled: isStarted && !isPaused && useSimulator,
-      coordinates: trail
-        ? trail.coordinates.map((c) => ({
-            latitude: c.latitude,
-            longitude: c.longitude,
-            altitude: null,
-            accuracy: null,
-            altitudeAccuracy: null,
-            heading: null,
-            speed: null,
-          }))
-        : [],
-    },
-    handleLocationUpdate
-  );
-
   useEffect(() => {
     const fetchTrailDetails = async () => {
       setLoading(true);
-      setError(null);
+      setErrorMsg(null);
       try {
         const token = await getToken({ template: "api-testing-token" });
         const response = await api.get(`/trails/${trailId}`, {
@@ -98,7 +78,7 @@ export function FollowTrailScreen() {
         });
         setTrail(response.data);
       } catch (err) {
-        setError("Não foi possível carregar os dados da trilha.");
+        setErrorMsg("Não foi possível carregar os dados da trilha.");
         console.error(err);
       } finally {
         setLoading(false);
@@ -145,7 +125,7 @@ export function FollowTrailScreen() {
     );
   }
 
-  if (error) {
+  if (errorMsg) {
     return (
       <SafeAreaView className="flex-1 bg-gray-50">
         <View
@@ -156,7 +136,7 @@ export function FollowTrailScreen() {
           <Header title="Erro" showBackButton />
         </View>
         <View className="flex-1 justify-center items-center p-6">
-          <Text className="text-red-500 text-center text-lg">{error}</Text>
+          <Text className="text-red-500 text-center text-lg">{errorMsg}</Text>
         </View>
       </SafeAreaView>
     );
