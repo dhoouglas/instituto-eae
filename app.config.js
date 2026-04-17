@@ -4,7 +4,7 @@ module.exports = {
     slug: "Instituto-EAE",
     scheme: "instituto-eae",
     owner: "dhoouglas",
-    version: "1.0.5",
+    version: "1.0.6",
     orientation: "portrait",
     icon: "./assets/splash-icon-light.png",
     userInterfaceStyle: "automatic",
@@ -19,6 +19,7 @@ module.exports = {
       },
     },
     ios: {
+      buildNumber: "1.0.6",
       supportsTablet: true,
       icon: {
         dark: "./assets/ios-dark.png",
@@ -37,6 +38,7 @@ module.exports = {
       },
     },
     android: {
+      versionCode: 6,
       adaptiveIcon: {
         foregroundImage: "./assets/adaptive-icon.png",
         monochromeImage: "./assets/adaptive-icon.png",

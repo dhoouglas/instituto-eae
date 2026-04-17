@@ -6,10 +6,11 @@ import {
   Inter_400Regular,
   Inter_700Bold,
 } from "@expo-google-fonts/inter";
-import { StatusBar } from "react-native";
+import { StatusBar } from "expo-status-bar";
 import { Routes } from "@/routes";
 import { ClerkProvider } from "@clerk/clerk-expo";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { tokenCache } from "@/utils/tokenCache";
 
 export default function App() {
   const [isFontsLoaded] = useFonts({ Inter_400Regular, Inter_700Bold });
@@ -29,12 +30,8 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <ClerkProvider publishableKey={publishableKey}>
-        <StatusBar
-          barStyle="dark-content"
-          backgroundColor="transparent"
-          translucent
-        />
+      <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
+        <StatusBar style="auto" translucent />
 
         <Routes />
       </ClerkProvider>
