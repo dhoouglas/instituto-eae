@@ -35,10 +35,10 @@ type FaunaFloraItem = {
   habitat?: string;
   family?: string;
   conservationStatus:
-    | "POUCO_PREOCUPANTE"
-    | "AMEACADA"
-    | "EXTINTA"
-    | "Status de Conservação";
+  | "POUCO_PREOCUPANTE"
+  | "AMEACADA"
+  | "EXTINTA"
+  | "Status de Conservação";
   imageUrls: string[];
 };
 
@@ -216,8 +216,8 @@ export function FaunaFloraDetailsScreen() {
 
   return (
     <View className="flex-1 bg-white">
-      <StatusBar translucent backgroundColor="transparent" barStyle={isLoading || !item?.imageUrls?.length ? "dark-content" : "light-content"} />
-      
+      <StatusBar barStyle={isLoading || !item?.imageUrls?.length ? "dark-content" : "light-content"} />
+
       {renderContent()}
 
       <SafeAreaView className="absolute top-0 left-0 w-full" pointerEvents="box-none">

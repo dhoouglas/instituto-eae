@@ -9,11 +9,12 @@ import {
   ActivityIndicator,
   Linking,
   Platform,
-  StatusBar,
   Dimensions,
+  StatusBar as RNStatusBar,
 } from "react-native";
+import { setStatusBarStyle } from "expo-status-bar";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useAuth } from "@clerk/clerk-expo";
-import { useNavigation } from "@react-navigation/native";
 import { EventsStackScreenProps } from "@/routes/types";
 import { FontAwesome } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
@@ -99,7 +100,7 @@ export function EventDetailsScreen({ route }: Props) {
 
   const handleOpenMaps = () => {
     if (!event?.location) return;
-    
+
     const encodedAddress = encodeURIComponent(event.location);
     const url = Platform.select({
       ios: `maps:0,0?q=${encodedAddress}`,
@@ -122,10 +123,10 @@ export function EventDetailsScreen({ route }: Props) {
           <Text className="text-xl font-[Inter_700Bold] text-gray-800 mt-4 text-center">
             Evento não encontrado.
           </Text>
-          <Button 
-            title="Voltar" 
-            onPress={() => navigation.goBack()} 
-            className="mt-6 bg-green-700 w-full" 
+          <Button
+            title="Voltar"
+            onPress={() => navigation.goBack()}
+            className="mt-6 bg-green-700 w-full"
           />
         </View>
       );
@@ -144,7 +145,7 @@ export function EventDetailsScreen({ route }: Props) {
             />
           ) : (
             <View className="w-full h-full bg-green-50 items-center justify-center pt-10">
-               <FontAwesome name="image" size={60} color="#166534" opacity={0.5} />
+              <FontAwesome name="image" size={60} color="#166534" opacity={0.5} />
             </View>
           )}
           <View className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black/60 to-transparent" />
@@ -217,9 +218,16 @@ export function EventDetailsScreen({ route }: Props) {
     );
   };
 
+  useFocusEffect(
+    useCallback(() => {
+      const style = isLoading || !event?.imageUrl ? "dark" : "light";
+      setStatusBarStyle(style);
+      return () => setStatusBarStyle("auto");
+    }, [isLoading, event?.imageUrl])
+  );
+
   return (
     <View className="flex-1 bg-white">
-      <StatusBar translucent backgroundColor="transparent" barStyle={isLoading || !event?.imageUrl ? "dark-content" : "light-content"} />
 
       {renderContent()}
 
@@ -228,7 +236,7 @@ export function EventDetailsScreen({ route }: Props) {
           onPress={() => navigation.goBack()}
           className="ml-4 mt-2 w-10 h-10 rounded-full items-center justify-center bg-white/30 backdrop-blur-md border border-white/40"
           style={{
-            marginTop: Platform.OS === "android" ? (StatusBar.currentHeight || 24) + 10 : 10,
+            marginTop: Platform.OS === "android" ? (RNStatusBar.currentHeight || 24) + 10 : 10,
           }}
         >
           <FontAwesome name="angle-left" size={24} color={isLoading || !event?.imageUrl ? "#374151" : "white"} style={{ marginRight: 2 }} />

@@ -10,10 +10,11 @@ import {
   ActivityIndicator,
   Linking,
   Platform,
-  StatusBar,
+  StatusBar as RNStatusBar,
   Dimensions,
   Image,
 } from "react-native";
+import { StatusBar } from "expo-status-bar";
 import { useAuth } from "@clerk/clerk-expo";
 import { AppTabScreenProps } from "@/routes/types";
 import { useFocusEffect } from "@react-navigation/native";
@@ -129,7 +130,7 @@ const EventCarouselCard = ({
         resizeMode="cover"
       >
         <View className="absolute top-0 left-0 right-0 bottom-0 bg-black/30" />
-        
+
         {/* Floating Date Badge */}
         <View className="absolute top-3 right-3 bg-white/95 rounded-xl items-center justify-center w-12 h-14 shadow-sm">
           <Text className="text-green-800 text-lg font-[Inter_800ExtraBold] leading-none mt-1">
@@ -249,9 +250,10 @@ export function Home({ navigation }: AppTabScreenProps<"home">) {
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
+      <StatusBar style="dark" />
       <View
         style={{
-          paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+          paddingTop: Platform.OS === "android" ? RNStatusBar.currentHeight : 0,
           flex: 1,
         }}
       >
@@ -262,7 +264,7 @@ export function Home({ navigation }: AppTabScreenProps<"home">) {
           }
         />
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 30 }}>
-          
+
           {/* Hero Section */}
           <HeroBanner
             onPress={() =>

@@ -6,10 +6,12 @@ import {
   ScrollView,
   Image,
   Platform,
-  StatusBar,
+  StatusBar as RNStatusBar,
   TouchableOpacity,
   Dimensions,
 } from "react-native";
+import { setStatusBarStyle } from "expo-status-bar";
+import { useFocusEffect } from "@react-navigation/native";
 import api from "@/lib/api";
 import { NewsStackScreenProps } from "@/routes/types";
 import Toast from "react-native-toast-message";
@@ -107,12 +109,12 @@ export function NewsDetailsScreen({ route, navigation }: Props) {
             />
           ) : (
             <View className="w-full h-full bg-green-50 items-center justify-center pt-10">
-               <FontAwesome name="newspaper-o" size={60} color="#166534" opacity={0.5} />
+              <FontAwesome name="newspaper-o" size={60} color="#166534" opacity={0.5} />
             </View>
           )}
           <View className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black/60 to-transparent" />
         </View>
-        
+
         <View className="bg-white -mt-8 rounded-t-[32px] pt-8 px-6 pb-20">
           <View className="flex-row items-center mb-4">
             <View className="bg-green-100 px-3 py-1.5 rounded-full mr-3">
@@ -135,9 +137,9 @@ export function NewsDetailsScreen({ route, navigation }: Props) {
           <Text className="text-3xl text-gray-900 leading-tight font-[Inter_800ExtraBold] tracking-tight">
             {post.title}
           </Text>
-          
+
           <View className="w-12 h-1.5 bg-green-600 rounded-full my-6" />
-          
+
           <Text className="text-[17px] text-gray-700 leading-relaxed font-[Inter_400Regular]">
             {post.content}
           </Text>
@@ -146,10 +148,17 @@ export function NewsDetailsScreen({ route, navigation }: Props) {
     );
   };
 
+  useFocusEffect(
+    useCallback(() => {
+      const style = isLoading || !post?.imageUrl ? "dark" : "light";
+      setStatusBarStyle(style);
+      return () => setStatusBarStyle("auto");
+    }, [isLoading, post?.imageUrl])
+  );
+
   return (
     <View className="flex-1 bg-white">
-      <StatusBar translucent backgroundColor="transparent" barStyle={isLoading || !post?.imageUrl ? "dark-content" : "light-content"} />
-      
+
       {renderContent()}
 
       <SafeAreaView className="absolute top-0 left-0 w-full" pointerEvents="box-none">
@@ -157,7 +166,7 @@ export function NewsDetailsScreen({ route, navigation }: Props) {
           onPress={() => navigation.goBack()}
           className="ml-4 mt-2 w-10 h-10 rounded-full items-center justify-center bg-white/30 backdrop-blur-md border border-white/40"
           style={{
-            marginTop: Platform.OS === "android" ? (StatusBar.currentHeight || 24) + 10 : 10,
+            marginTop: Platform.OS === "android" ? (RNStatusBar.currentHeight || 24) + 10 : 10,
           }}
         >
           <FontAwesome name="angle-left" size={24} color={isLoading || !post?.imageUrl ? "#374151" : "white"} style={{ marginRight: 2 }} />
