@@ -1,11 +1,11 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 type Option<T extends string> = {
   value: T;
   label: string;
-  icon?: keyof typeof MaterialIcons.glyphMap;
+  icon?: keyof typeof MaterialCommunityIcons.glyphMap;
 };
 
 type OptionSelectorProps<T extends string> = {
@@ -25,15 +25,14 @@ export function OptionSelector<T extends string>({
         <TouchableOpacity
           key={value}
           onPress={() => onSelect(value)}
-          className={`items-center justify-center py-3 px-4 rounded-lg border-2 ${
-            selectedValue === value
+          className={`items-center justify-center py-3 px-4 rounded-lg border-2 ${selectedValue === value
               ? "bg-green-800 border-green-800"
               : "bg-white border-gray-200"
-          }`}
+            }`}
           style={{ flexGrow: 1, minWidth: "30%" }}
         >
           {icon && (
-            <MaterialIcons
+            <MaterialCommunityIcons
               name={icon}
               size={24}
               className={
@@ -42,9 +41,8 @@ export function OptionSelector<T extends string>({
             />
           )}
           <Text
-            className={`font-bold mt-1 text-center ${
-              selectedValue === value ? "text-white" : "text-gray-700"
-            }`}
+            className={`font-bold mt-1 text-center ${selectedValue === value ? "text-white" : "text-gray-700"
+              }`}
           >
             {label}
           </Text>

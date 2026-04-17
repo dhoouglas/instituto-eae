@@ -63,7 +63,7 @@ export const WaypointForm = memo(
     ]);
 
     return (
-      <View className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4">
+      <View className="w-full">
         <Text className="text-lg font-bold text-green-800 mb-3">
           Ponto de Interesse #{displayOrder}
         </Text>

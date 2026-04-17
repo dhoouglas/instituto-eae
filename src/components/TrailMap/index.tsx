@@ -1,7 +1,8 @@
 import React, { useRef, useEffect, useCallback } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from "react-native";
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from "react-native-maps";
 import { FontAwesome, MaterialCommunityIcons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 
 interface Coordinate {
   latitude: number;
@@ -64,6 +65,7 @@ export function TrailMap({
 
   const handleMapPress = (event: { nativeEvent: { coordinate: any } }) => {
     if (!isEditing) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
     const { coordinate } = event.nativeEvent;
 
@@ -76,9 +78,10 @@ export function TrailMap({
   };
 
   const handleZoom = async (direction: "in" | "out") => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (!mapRef.current) return;
     const camera = await mapRef.current.getCamera();
-    if (camera.zoom) {
+    if (camera && camera.zoom !== undefined) {
       camera.zoom = direction === "in" ? camera.zoom + 1 : camera.zoom - 1;
       mapRef.current.animateCamera(camera);
     }
@@ -86,8 +89,8 @@ export function TrailMap({
 
   if (coordinates.length === 0 && !isEditing) {
     return (
-      <View className="h-80 rounded-xl overflow-hidden border border-gray-200 bg-gray-100 flex items-center justify-center">
-        <Text className="text-gray-500">Mapa indisponível.</Text>
+      <View className="h-[300px] w-full rounded-2xl overflow-hidden border border-gray-200 bg-gray-100 flex items-center justify-center">
+        <Text className="text-gray-500 font-bold text-lg">Mapa indisponível.</Text>
         <Text className="text-gray-400 text-sm mt-1">
           Não há um traçado para esta trilha.
         </Text>
@@ -96,10 +99,10 @@ export function TrailMap({
   }
 
   return (
-    <View className="h-80 rounded-xl overflow-hidden border border-gray-200">
+    <View className="h-[340px] w-full rounded-2xl overflow-hidden bg-[#e5e7eb] relative">
       <MapView
         ref={mapRef}
-        style={{ flex: 1 }}
+        style={StyleSheet.absoluteFillObject}
         provider={PROVIDER_GOOGLE}
         mapType="hybrid"
         initialRegion={{
@@ -115,8 +118,10 @@ export function TrailMap({
       >
         <Polyline
           coordinates={coordinates}
-          strokeColor="#FF6347"
-          strokeWidth={4}
+          strokeColor="#f97316"
+          strokeWidth={5}
+          lineCap="round"
+          lineJoin="round"
         />
 
         {/* Waypoints */}
@@ -129,130 +134,114 @@ export function TrailMap({
                   latitude: waypoint.latitude,
                   longitude: waypoint.longitude,
                 }}
-                pinColor="gold"
+                pinColor="blue"
                 title={waypoint.name || `Ponto de Interesse #${waypoint.order}`}
                 description={waypoint.description}
-                onPress={() => onWaypointPress?.(waypoint)}
+                onPress={(e) => {
+                  e.stopPropagation();
+                  if (onWaypointPress) {
+                    Haptics.selectionAsync();
+                    onWaypointPress(waypoint);
+                  }
+                }}
               />
             );
           }
           return null;
         })}
 
-        {/* Start and End Markers */}
+        {/* Start/End Markers */}
         {coordinates.length > 0 && (
           <>
-            <Marker
-              coordinate={coordinates[0]}
-              title="Início da Trilha"
-              pinColor="green"
-            />
+            <Marker coordinate={coordinates[0]} pinColor="green" title="Início" />
             {coordinates.length > 1 && (
-              <Marker
-                coordinate={coordinates[coordinates.length - 1]}
-                title="Fim da Trilha"
-                pinColor="black"
-              />
+              <Marker coordinate={coordinates[coordinates.length - 1]} pinColor="red" title="Fim" />
             )}
           </>
         )}
       </MapView>
-      <View className="absolute top-2 right-2 flex-col items-end">
-        <TouchableOpacity
-          onPress={fitMapToCoordinates}
-          className="w-10 h-10 rounded-full items-center justify-center bg-white/80 mb-2"
-        >
-          <FontAwesome name="crosshairs" size={20} color="gray" />
-        </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={() => handleZoom("in")}
-          className="w-10 h-10 rounded-full items-center justify-center bg-white/80 mb-2"
-        >
-          <FontAwesome name="plus" size={20} color="gray" />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={() => handleZoom("out")}
-          className="w-10 h-10 rounded-full items-center justify-center bg-white/80 mb-2"
-        >
-          <FontAwesome name="minus" size={20} color="gray" />
-        </TouchableOpacity>
-
+      {/* Floating Controls Right */}
+      <View className="absolute top-3 right-3 bg-white/90 backdrop-blur-md rounded-2xl p-1 shadow-sm border border-gray-100">
         {isEditing && (
           <>
             <TouchableOpacity
               onPress={() => onInteractionModeChange?.("drawTrail")}
-              className={`w-10 h-10 rounded-full items-center justify-center mb-2 ${
-                interactionMode === "drawTrail" ? "bg-blue-500" : "bg-white/80"
-              }`}
+              className={`w-9 h-9 rounded-full items-center justify-center mb-1 ${interactionMode === "drawTrail" ? "bg-green-700" : ""
+                }`}
             >
-              <MaterialCommunityIcons
-                name="vector-polyline"
-                size={22}
-                color={interactionMode === "drawTrail" ? "white" : "gray"}
+              <FontAwesome
+                name="pencil"
+                size={16}
+                color={interactionMode === "drawTrail" ? "white" : "#4b5563"}
               />
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={() => onInteractionModeChange?.("addWaypoint")}
-              className={`w-10 h-10 rounded-full items-center justify-center mb-2 ${
-                interactionMode === "addWaypoint"
-                  ? "bg-blue-500"
-                  : "bg-white/80"
-              }`}
+              className={`w-9 h-9 rounded-full items-center justify-center mb-1 ${interactionMode === "addWaypoint" ? "bg-green-700" : ""
+                }`}
             >
               <FontAwesome
                 name="map-marker"
-                size={22}
-                color={interactionMode === "addWaypoint" ? "white" : "gray"}
+                size={16}
+                color={interactionMode === "addWaypoint" ? "white" : "#4b5563"}
               />
             </TouchableOpacity>
 
-            {coordinates.length > 0 && (
-              <TouchableOpacity
-                onPress={onUndo}
-                className="w-10 h-10 rounded-full items-center justify-center bg-white/80"
-              >
-                <MaterialCommunityIcons name="undo" size={22} color="gray" />
-              </TouchableOpacity>
-            )}
+            <View className="h-px w-6 bg-gray-200 self-center my-1" />
           </>
         )}
+
+        <TouchableOpacity
+          onPress={() => handleZoom("in")}
+          className="w-9 h-9 rounded-full items-center justify-center mb-1"
+        >
+          <FontAwesome name="plus" size={16} color="#4b5563" />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => handleZoom("out")}
+          className="w-9 h-9 rounded-full items-center justify-center mb-1"
+        >
+          <FontAwesome name="minus" size={16} color="#4b5563" />
+        </TouchableOpacity>
+
+        <View className="h-px w-6 bg-gray-200 self-center my-1" />
+
+        <TouchableOpacity
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            fitMapToCoordinates();
+          }}
+          className="w-9 h-9 rounded-full items-center justify-center"
+        >
+          <FontAwesome name="crosshairs" size={16} color="#4b5563" />
+        </TouchableOpacity>
       </View>
+
+      {/* Floating Bottom Left Controls */}
       {isEditing && (
-        <View className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/60 px-4 py-2 rounded-full">
-          <Text className="text-white font-semibold">
-            {interactionMode === "drawTrail"
-              ? "Modo: Desenhar Trilha"
-              : "Modo: Adicionar Ponto de Interesse"}
-          </Text>
+        <View className="absolute bottom-3 left-3 flex-row items-end gap-2">
+          {coordinates.length > 0 && (
+            <TouchableOpacity
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                onUndo?.();
+              }}
+              className="w-10 h-10 rounded-full bg-white/90 backdrop-blur-md items-center justify-center shadow-sm border border-gray-100"
+            >
+              <MaterialCommunityIcons name="undo" size={20} color="#ef4444" />
+            </TouchableOpacity>
+          )}
+
+          <View className="bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
+            <Text className="text-white text-xs font-bold tracking-wider">
+              {interactionMode === "drawTrail" ? "DESENHANDO" : "MARCANDO PONTO"}
+            </Text>
+          </View>
         </View>
       )}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  waypointIcon: {
-    textShadowColor: "rgba(0, 0, 0, 0.4)",
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 3,
-  },
-  waypointOrderText: {
-    textShadowColor: "rgba(0, 0, 0, 0.75)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-  },
-  markerPin: {
-    width: 0,
-    height: 0,
-    borderLeftWidth: 6,
-    borderRightWidth: 6,
-    borderTopWidth: 10,
-    borderLeftColor: "transparent",
-    borderRightColor: "transparent",
-    alignSelf: "center",
-    marginTop: -2,
-  },
-});
