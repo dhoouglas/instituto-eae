@@ -12,11 +12,11 @@ import MapView, { Polyline, PROVIDER_GOOGLE, Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import { useNavigation } from "@react-navigation/native";
 import { FontAwesome } from "@expo/vector-icons";
-import { Header } from "@/components/Header";
 import { TrailStackScreenProps } from "@/routes/types";
 import { useMockedLocation } from "@/hooks/useMockedLocation";
 import { useLocation } from "@/hooks/useLocation";
 import { useStopwatch } from "@/hooks/useStopwatch";
+import * as Haptics from "expo-haptics";
 
 type LocationCoord = {
   latitude: number;
@@ -28,7 +28,7 @@ export function RecordTrailScreen() {
     useNavigation<TrailStackScreenProps<"RecordTrail">["navigation"]>();
   const [isRecording, setIsRecording] = useState(false);
   const [path, setPath] = useState<LocationCoord[]>([]);
-  const [waypointOrders, setWaypointOrders] = useState<number[]>([]);
+  const [waypoints, setWaypoints] = useState<LocationCoord[]>([]);
   const [currentLocation, setCurrentLocation] = useState<LocationCoord | null>(
     null
   );
@@ -64,9 +64,10 @@ export function RecordTrailScreen() {
     Alert.alert("Erro de Localização", error);
   }, []);
 
-  // Hook para localização real via GPS
+  // Hook para localização real via GPS (background habilitado para gravar com tela desligada)
   const { hasPermission } = useLocation({
     enabled: isRecording && !useSimulator,
+    requestBackground: true,
     onLocationUpdate: locationCallback,
     onError: handleLocationError,
   });
@@ -106,6 +107,7 @@ export function RecordTrailScreen() {
   );
 
   const handleToggleRecording = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     const newIsRecording = !isRecording;
     setIsRecording(newIsRecording);
 
@@ -123,6 +125,7 @@ export function RecordTrailScreen() {
   };
 
   const handleFinishRecording = () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     if (path.length < 2) {
       Alert.alert("Nenhum Percurso", "Grave um percurso antes de finalizar.");
       return;
@@ -131,12 +134,17 @@ export function RecordTrailScreen() {
     setDuration(time); // Salva o tempo final
     navigation.navigate("TrailForm", {
       coordinates: path,
-      waypointOrders: waypointOrders,
-      duration: time, // Passa a duração para o formulário
+      waypointOrders: waypoints.map((wp) =>
+        path.findIndex(
+          (p) => p.latitude === wp.latitude && p.longitude === wp.longitude
+        ) + 1
+      ),
+      duration: time,
     });
   };
 
   const handleDiscardRecording = () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
     Alert.alert(
       "Descartar Gravação",
       "Tem certeza que deseja descartar o percurso atual?",
@@ -149,9 +157,10 @@ export function RecordTrailScreen() {
           text: "Descartar",
           style: "destructive",
           onPress: () => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
             setIsRecording(false);
             setPath([]);
-            setWaypointOrders([]);
+            setWaypoints([]);
             reset(); // Zera o cronômetro
           },
         },
@@ -160,6 +169,7 @@ export function RecordTrailScreen() {
   };
 
   const handleCenterMap = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (currentLocation && mapRef.current) {
       mapRef.current.animateToRegion({
         ...currentLocation,
@@ -170,47 +180,60 @@ export function RecordTrailScreen() {
   };
 
   const handleMarkWaypoint = () => {
-    if (!isRecording || path.length === 0) {
+    if (!isRecording || path.length === 0 || !currentLocation) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert(
         "Ação Inválida",
         "Você precisa estar gravando um percurso para marcar um ponto."
       );
       return;
     }
-    // A ordem do waypoint deve ser sequencial (1, 2, 3...), baseada na contagem atual de waypoints.
-    const newWaypointOrder = waypointOrders.length + 1;
-    const currentPathIndex = path.length; // O índice no array do trajeto
-
-    // Armazena o índice do trajeto onde o waypoint foi marcado.
-    // Isso mantém a associação entre o waypoint e sua localização no trajeto.
-    setWaypointOrders((prev) => [...prev, currentPathIndex]);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    // Salva a coordenada exata do usuário no momento da marcação
+    const waypointNumber = waypoints.length + 1;
+    setWaypoints((prev) => [...prev, { ...currentLocation }]);
 
     Alert.alert(
       "Ponto de Interesse Marcado!",
-      `O Ponto de Interesse #${newWaypointOrder} foi marcado.`
+      `O Ponto de Interesse #${waypointNumber} foi marcado.`
     );
   };
 
   const handleZoom = async (type: "in" | "out") => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (!mapRef.current) return;
     const camera = await mapRef.current.getCamera();
-    if (camera.zoom) {
+    if (camera && camera.zoom !== undefined) {
       camera.zoom = type === "in" ? camera.zoom + 1 : camera.zoom - 1;
       mapRef.current.animateCamera(camera);
     }
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <SafeAreaView className="flex-1 bg-[#F9FAFB]">
       <View
         style={{
           paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
           flex: 1,
         }}
       >
-        <Header title="Gravar Nova Trilha" showBackButton={true} />
+        {/* PREMIUM HEADER */}
+        <View className="px-6 pt-6 pb-4 flex-row items-center justify-between z-10 bg-[#F9FAFB]">
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            className="w-10 h-10 rounded-full bg-white items-center justify-center shadow-sm border border-gray-200"
+            activeOpacity={0.8}
+          >
+            <FontAwesome name="chevron-left" size={16} color="#374151" />
+          </TouchableOpacity>
+          <View className="flex-1 ml-4">
+            <Text className="text-2xl font-black text-gray-900 tracking-tight">
+              Gravar Trilha
+            </Text>
+          </View>
+        </View>
 
-        <View className="flex-1">
+        <View className="flex-1 relative rounded-t-3xl overflow-hidden shadow-sm">
           {currentLocation ? (
             <MapView
               provider={PROVIDER_GOOGLE}
@@ -224,110 +247,146 @@ export function RecordTrailScreen() {
               }}
               showsUserLocation
               showsMyLocationButton={false}
+              followsUserLocation={isRecording}
             >
               <Polyline
                 coordinates={path}
-                strokeColor="#FF6347"
-                strokeWidth={5}
+                strokeColor="#f97316"
+                strokeWidth={6}
+                zIndex={2}
               />
-              {waypointOrders.map((pathIndex, index) => {
-                const coordinate = path[pathIndex - 1];
-                if (!coordinate) return null;
-                const waypointNumber = index + 1; // A numeração sequencial correta
-                return (
-                  <Marker
-                    key={`waypoint-${waypointNumber}`}
-                    coordinate={coordinate}
-                    pinColor="blue"
-                    title={`Ponto de Interesse #${waypointNumber}`}
-                  />
-                );
-              })}
+              {waypoints.map((coord, index) => (
+                <Marker
+                  key={`waypoint-${index}`}
+                  coordinate={coord}
+                  pinColor="gold"
+                  title={`Ponto de Interesse #${index + 1}`}
+                />
+              ))}
             </MapView>
           ) : (
-            <View className="flex-1 justify-center items-center">
-              <Text>{errorMsg || "Obtendo localização..."}</Text>
+            <View className="flex-1 justify-center items-center bg-gray-200">
+              <Text className="text-gray-500 font-medium">
+                {errorMsg || "Obtendo localização..."}
+              </Text>
             </View>
           )}
 
+          {/* TIMER OVERLAY (GLASSMORPHISM PILL) */}
           {isActive && (
-            <View className="absolute top-4 self-center bg-gray-800/90 p-2 px-4 rounded-lg">
-              <Text className="text-xl font-bold text-white tracking-wider">
+            <View className="absolute top-6 self-center bg-black/70 px-5 py-2 rounded-full border border-white/20 shadow-lg backdrop-blur-md">
+              <Text
+                className="text-2xl font-black text-white tracking-widest"
+                style={{ fontVariant: ['tabular-nums'] }}
+              >
                 {formattedTime}
               </Text>
             </View>
           )}
 
-          {/* Map Control Buttons */}
-          <View className="absolute bottom-40 right-4 gap-1">
+          {/* MAP CONTROLS (RIGHT PANE) */}
+          <View className="absolute bottom-40 right-4 bg-white/90 rounded-2xl p-1 shadow-md border border-gray-100 backdrop-blur-md">
+            <TouchableOpacity
+              onPress={handleCenterMap}
+              className="w-10 h-10 items-center justify-center border-b border-gray-200"
+            >
+              <FontAwesome name="crosshairs" size={18} color="#374151" />
+            </TouchableOpacity>
             <TouchableOpacity
               onPress={() => handleZoom("in")}
-              className="w-12 h-12 rounded-full items-center justify-center bg-white/80"
+              className="w-10 h-10 items-center justify-center border-b border-gray-200"
             >
-              <FontAwesome name="plus" size={20} color="gray" />
+              <FontAwesome name="plus" size={16} color="#374151" />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => handleZoom("out")}
-              className="w-12 h-12 rounded-full items-center justify-center bg-white/80"
+              className="w-10 h-10 items-center justify-center"
             >
-              <FontAwesome name="minus" size={20} color="gray" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={handleCenterMap}
-              className="w-12 h-12 rounded-full items-center justify-center bg-white/80"
-            >
-              <FontAwesome name="crosshairs" size={20} color="gray" />
+              <FontAwesome name="minus" size={16} color="#374151" />
             </TouchableOpacity>
           </View>
 
-          <View className="absolute bottom-0 left-0 right-0 bg-white/80 p-5">
-            <View className="flex-row justify-evenly items-center">
-              <TouchableOpacity
-                onPress={handleToggleRecording}
-                className={`w-20 h-20 rounded-full items-center justify-center ${
-                  isRecording ? "bg-red-500" : "bg-green-500"
-                }`}
-              >
-                <FontAwesome
-                  name={isRecording ? "pause" : "play"}
-                  size={24}
-                  color="white"
-                />
-              </TouchableOpacity>
-
-              {isRecording && path.length > 0 && (
-                <TouchableOpacity
-                  onPress={handleMarkWaypoint}
-                  className="w-16 h-16 rounded-full items-center justify-center bg-blue-500"
-                >
-                  <FontAwesome name="map-marker" size={24} color="white" />
-                </TouchableOpacity>
-              )}
-
+          {/* BOTTOM CONTROLS (THUMB ZONE) */}
+          <View className="absolute bottom-6 left-6 right-6">
+            <View className="flex-row justify-center items-end gap-6">
               {path.length > 0 && !isRecording && (
                 <TouchableOpacity
                   onPress={handleDiscardRecording}
-                  className="w-16 h-16 rounded-full items-center justify-center bg-yellow-500"
+                  className="w-14 h-14 rounded-full bg-white items-center justify-center shadow-sm border border-red-100 mb-2"
+                  activeOpacity={0.8}
                 >
-                  <FontAwesome name="trash" size={24} color="white" />
+                  <FontAwesome name="trash" size={20} color="#ef4444" />
                 </TouchableOpacity>
               )}
 
+              {/* WAYPOINT BUTTON */}
+              {isRecording && path.length > 0 && (
+                <TouchableOpacity
+                  onPress={handleMarkWaypoint}
+                  className="w-14 h-14 rounded-full bg-white items-center justify-center shadow-sm border border-blue-100 mb-2"
+                  activeOpacity={0.8}
+                >
+                  <FontAwesome name="map-pin" size={20} color="#3b82f6" />
+                  {waypoints.length > 0 && (
+                    <View className="absolute -top-1 -right-1 bg-blue-600 w-5 h-5 rounded-full items-center justify-center border border-white">
+                      <Text className="text-white text-[10px] font-bold">
+                        {waypoints.length}
+                      </Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              )}
+
+              {/* PLAY/PAUSE (PRIMARY) */}
+              <TouchableOpacity
+                onPress={handleToggleRecording}
+                className={`w-20 h-20 rounded-full items-center justify-center shadow-lg border-4 border-white ${isRecording ? "bg-amber-500" : "bg-green-600"
+                  }`}
+                style={{
+                  shadowColor: isRecording ? "#f59e0b" : "#16a34a",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.4,
+                  shadowRadius: 8,
+                  elevation: 6,
+                }}
+                activeOpacity={0.9}
+              >
+                <FontAwesome
+                  name={isRecording ? "pause" : "play"}
+                  size={28}
+                  color="white"
+                  style={{ marginLeft: isRecording ? 0 : 4 }}
+                />
+              </TouchableOpacity>
+
+              {/* FINISH BUTTON */}
               <TouchableOpacity
                 onPress={handleFinishRecording}
                 disabled={isRecording || path.length < 2}
-                className={`w-20 h-20 rounded-full items-center justify-center ${
-                  isRecording || path.length < 2 ? "bg-gray-400" : "bg-blue-500"
-                }`}
+                className={`w-14 h-14 rounded-full items-center justify-center shadow-sm mb-2 ${isRecording || path.length < 2
+                  ? "bg-gray-200 border border-gray-300"
+                  : "bg-blue-600 border border-blue-700"
+                  }`}
+                activeOpacity={0.8}
               >
-                <FontAwesome name="check" size={24} color="white" />
+                <FontAwesome
+                  name="check"
+                  size={20}
+                  color={isRecording || path.length < 2 ? "#9ca3af" : "white"}
+                />
               </TouchableOpacity>
             </View>
-            {waypointOrders.length > 0 && (
-              <Text className="text-center mt-2 text-gray-600">
-                {waypointOrders.length} ponto(s) de interesse marcado(s).
+
+            {/* INSTRUCTIONS */}
+            <View className="mt-6 items-center self-center bg-white/90 px-4 py-2 rounded-full border border-gray-200 shadow-sm">
+              <Text className="text-gray-600 text-xs font-bold uppercase tracking-wide">
+                {isRecording
+                  ? "Gravando em tempo real..."
+                  : path.length > 0
+                    ? "Gravação pausada"
+                    : "Toque em iniciar para gravar a trilha"}
               </Text>
-            )}
+            </View>
           </View>
         </View>
       </View>

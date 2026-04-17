@@ -4,6 +4,7 @@ import {
   Text,
   FlatList,
   TouchableOpacity,
+  Pressable,
   SafeAreaView,
   Platform,
   StatusBar,
@@ -17,6 +18,7 @@ import { useAuth, useUser } from "@clerk/clerk-expo";
 import { FontAwesome } from "@expo/vector-icons";
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system";
+import * as Haptics from "expo-haptics";
 import { Header } from "@/components/Header";
 import { SpeedDial } from "@/components/SpeedDial";
 import { Loading } from "@/components/Loading";
@@ -34,6 +36,31 @@ type Trail = {
   imageUrls: string[];
 };
 
+const DifficultyBadge = ({ difficulty }: { difficulty: string }) => {
+  let bgColor = "bg-green-100";
+  let textColor = "text-green-800";
+  let icon = "leaf";
+
+  if (difficulty === "MEDIO") {
+    bgColor = "bg-amber-100";
+    textColor = "text-amber-800";
+    icon = "fire";
+  } else if (difficulty === "DIFICIL") {
+    bgColor = "bg-red-100";
+    textColor = "text-red-800";
+    icon = "bolt";
+  }
+
+  return (
+    <View className={`${bgColor} px-2.5 py-1 rounded-md flex-row items-center`}>
+      <FontAwesome name={icon as any} size={12} color={textColor === "text-green-800" ? "#166534" : textColor === "text-amber-800" ? "#92400e" : "#991b1b"} />
+      <Text className={`${textColor} text-xs font-bold ml-1.5 capitalize`}>
+        {difficulty.toLowerCase()}
+      </Text>
+    </View>
+  );
+};
+
 const TrailCard = ({
   item,
   onPress,
@@ -47,60 +74,77 @@ const TrailCard = ({
   onDelete: () => void;
   isAdmin: boolean;
 }) => (
-  <TouchableOpacity
-    onPress={onPress}
-    className="bg-white rounded-xl shadow-md mb-5 overflow-hidden"
-    activeOpacity={0.8}
+  <Pressable
+    onPress={() => {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      onPress();
+    }}
+    className="bg-white rounded-3xl mb-6 shadow-sm border border-gray-100 overflow-hidden"
+    style={({ pressed }) => [
+      {
+        transform: [{ scale: pressed ? 0.98 : 1 }],
+        opacity: pressed ? 0.9 : 1,
+        elevation: 3,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+    ]}
   >
-    {isAdmin && (
-      <View className="absolute bottom-3 right-3 flex-row gap-1 z-10">
-        <TouchableOpacity
-          onPress={(e) => {
-            e.stopPropagation();
-            onEdit();
-          }}
-          className="bg-green-800/80 w-8 h-8 rounded-lg items-center justify-center shadow"
-        >
-          <FontAwesome name="pencil" size={16} color="white" />
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={(e) => {
-            e.stopPropagation();
-            onDelete();
-          }}
-          className="bg-green-800/80 w-8 h-8 rounded-lg items-center justify-center shadow"
-        >
-          <FontAwesome name="trash" size={16} color="white" />
-        </TouchableOpacity>
-      </View>
-    )}
-    <Image
-      source={{ uri: item.imageUrls?.[0] }}
-      className="w-full h-32 bg-gray-200"
-      resizeMode="cover"
-    />
-    <View className="p-4">
-      <Text className="text-lg font-bold text-gray-800 leading-tight">
+    <View className="relative">
+      <Image
+        source={{ uri: item.imageUrls?.[0] }}
+        className="w-full h-40 bg-gray-200"
+        resizeMode="cover"
+      />
+      {isAdmin && (
+        <View className="absolute top-3 right-3 flex-row gap-2 z-10">
+          <TouchableOpacity
+            onPress={(e) => {
+              e.stopPropagation();
+              Haptics.selectionAsync();
+              onEdit();
+            }}
+            className="bg-white/90 backdrop-blur-md w-9 h-9 rounded-full items-center justify-center shadow-sm"
+          >
+            <FontAwesome name="pencil" size={16} color="#1f2937" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={(e) => {
+              e.stopPropagation();
+              Haptics.selectionAsync();
+              onDelete();
+            }}
+            className="bg-white/90 backdrop-blur-md w-9 h-9 rounded-full items-center justify-center shadow-sm"
+          >
+            <FontAwesome name="trash" size={16} color="#ef4444" />
+          </TouchableOpacity>
+        </View>
+      )}
+    </View>
+    <View className="p-5">
+      <Text className="text-xl font-extrabold text-gray-900 leading-tight mb-3 tracking-tight">
         {item.name}
       </Text>
-      <View className="flex-row items-center mt-2">
-        <FontAwesome name="map-signs" size={14} color="#6B7280" />
-        <Text className="text-base text-gray-600 ml-2">{item.distance} km</Text>
-      </View>
-      <View className="flex-row items-center mt-1">
-        <FontAwesome name="line-chart" size={14} color="#6B7280" />
-        <Text className="text-base text-gray-600 ml-2 capitalize">
-          {item.difficulty.toLowerCase()}
-        </Text>
-      </View>
-      <View className="flex-row items-center mt-1">
-        <FontAwesome name="clock-o" size={14} color="#6B7280" />
-        <Text className="text-base text-gray-600 ml-2">
-          {formatTime(item.estimatedTime)}
-        </Text>
+      
+      <View className="flex-row items-center gap-2 flex-wrap">
+        <DifficultyBadge difficulty={item.difficulty} />
+        
+        <View className="bg-gray-100 px-2.5 py-1 rounded-md flex-row items-center">
+          <FontAwesome name="map-signs" size={12} color="#4b5563" />
+          <Text className="text-gray-700 text-xs font-semibold ml-1.5">{item.distance} km</Text>
+        </View>
+
+        <View className="bg-gray-100 px-2.5 py-1 rounded-md flex-row items-center">
+          <FontAwesome name="clock-o" size={12} color="#4b5563" />
+          <Text className="text-gray-700 text-xs font-semibold ml-1.5">
+            {formatTime(item.estimatedTime)}
+          </Text>
+        </View>
       </View>
     </View>
-  </TouchableOpacity>
+  </Pressable>
 );
 
 export function TrailList() {
@@ -149,6 +193,7 @@ export function TrailList() {
           text: "Excluir",
           style: "destructive",
           onPress: async () => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
             try {
               const token = await getToken({ template: "api-testing-token" });
               await api.delete(`/trails/${trailId}`, {
@@ -371,7 +416,7 @@ export function TrailList() {
 
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center bg-gray-50">
+      <View className="flex-1 justify-center items-center bg-[#F9FAFB]">
         <Loading />
       </View>
     );
@@ -379,14 +424,14 @@ export function TrailList() {
 
   if (error) {
     return (
-      <View className="flex-1 justify-center items-center">
-        <Text className="text-red-500">{error}</Text>
+      <View className="flex-1 justify-center items-center bg-[#F9FAFB]">
+        <Text className="text-red-500 font-medium">{error}</Text>
       </View>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <SafeAreaView className="flex-1 bg-[#F9FAFB]">
       <View
         style={{
           paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
@@ -394,6 +439,7 @@ export function TrailList() {
         }}
       >
         <Header title="Trilhas" showBackButton={true} />
+
         <FlatList
           data={trails}
           renderItem={renderItem}
@@ -405,13 +451,15 @@ export function TrailList() {
           }}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={() => (
-            <View className="flex-1 justify-center items-center mt-20">
-              <FontAwesome name="map-o" size={40} color="#9CA3AF" />
-              <Text className="text-gray-500 text-lg mt-4">
-                Nenhuma trilha encontrada.
+            <View className="flex-1 justify-center items-center mt-32">
+              <View className="w-20 h-20 bg-gray-100 rounded-full items-center justify-center mb-4">
+                <FontAwesome name="map-o" size={32} color="#9CA3AF" />
+              </View>
+              <Text className="text-gray-800 font-bold text-xl">
+                Nenhuma trilha
               </Text>
-              <Text className="text-gray-400 mt-1">
-                Crie a primeira trilha no botão abaixo!
+              <Text className="text-gray-500 mt-2 text-center max-w-[250px]">
+                As trilhas criadas aparecerão aqui para você explorar.
               </Text>
             </View>
           )}

@@ -10,15 +10,19 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Modal,
+  Dimensions,
 } from "react-native";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { FontAwesome } from "@expo/vector-icons";
-import { Header } from "@/components/Header";
 import { TrailMap } from "@/components/TrailMap";
 import api from "@/lib/api";
 import { AppNavigatorRoutesProps, TrailStackParamList } from "@/routes/types";
 import { useAuth } from "@clerk/clerk-expo";
 import { formatTime } from "@/utils/formatters";
+import { LinearGradient } from "expo-linear-gradient";
+import * as Haptics from "expo-haptics";
+
+const { width } = Dimensions.get("window");
 
 interface ApiWaypoint {
   id: string;
@@ -47,46 +51,21 @@ interface Trail {
   waypoints: ApiWaypoint[];
 }
 
-// Mock data for a single trail
-const mockTrailDetails: Trail = {
-  id: "c0921fb3-6677-46df-9ea1-ab6633456f55",
-  name: "Trilha da Cachoeira Escondida",
-  description:
-    "Uma trilha de nível médio que serpenteia pela floresta densa, culminando em uma cachoeira deslumbrante, perfeita para um mergulho refrescante. O percurso é bem sinalizado e oferece vistas espetaculares da fauna e flora locais.",
-  distance: 7.2,
-  difficulty: "MEDIO",
-  estimatedTime: 180, // in minutes
-  elevationGain: 450, // in meters
-  status: "ATIVO",
-  type: "CAMINHADA",
-  imageUrls: ["https://i.ibb.co/dGA1hXJ/placeholder-image.png"],
-  coordinates: [
-    { latitude: -23.563, longitude: -46.655 },
-    { latitude: -23.56, longitude: -46.658 },
-    { latitude: -23.565, longitude: -46.669 },
-    { latitude: -23.561, longitude: -46.652 },
-  ],
-  waypoints: [
-    {
-      id: "73082405-cba4-45bd-b1fa-64c65e63d615",
-      name: "Mirante Principal",
-      description: "Vista panorâmica do vale.",
-      order: 1,
-      coordinate: {
-        latitude: -23.563,
-        longitude: -46.655,
-      },
-      imageUrl: "https://i.ibb.co/dGA1hXJ/placeholder-image.png",
-    },
-  ],
-};
-
-const InfoCard = ({ icon, label, value }: any) => (
-  <View className="flex-row items-center">
-    <FontAwesome name={icon} size={20} color="#166534" />
-    <View className="ml-3">
-      <Text className="text-gray-500 text-xs">{label}</Text>
-      <Text className="text-gray-800 font-bold text-sm">{value}</Text>
+const InfoCard = ({ icon, label, value, color = "#166534" }: any) => (
+  <View className="flex-1 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex-row items-center m-1">
+    <View
+      className="w-10 h-10 rounded-full items-center justify-center mr-3"
+      style={{ backgroundColor: `${color}15` }}
+    >
+      <FontAwesome name={icon} size={18} color={color} />
+    </View>
+    <View className="flex-1">
+      <Text className="text-gray-500 text-[11px] font-semibold uppercase tracking-wider mb-0.5">
+        {label}
+      </Text>
+      <Text className="text-gray-900 font-black text-sm tracking-tight">
+        {value}
+      </Text>
     </View>
   </View>
 );
@@ -103,11 +82,13 @@ export function TrailDetails() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const openImageModal = (imageUrl: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedImage(imageUrl);
     setModalVisible(true);
   };
 
   const closeImageModal = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedImage(null);
     setModalVisible(false);
   };
@@ -148,190 +129,250 @@ export function TrailDetails() {
 
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center bg-gray-50">
+      <View className="flex-1 justify-center items-center bg-[#F9FAFB]">
         <ActivityIndicator size="large" color="#166534" />
       </View>
     );
   }
 
-  if (error) {
+  if (error || !trail) {
     return (
-      <View className="flex-1 justify-center items-center bg-gray-50 p-6">
-        <Text className="text-red-500 text-center text-lg">{error}</Text>
-      </View>
-    );
-  }
-
-  if (!trail) {
-    return (
-      <View className="flex-1 justify-center items-center bg-gray-50">
-        <Text className="text-gray-600 text-lg">Trilha não encontrada.</Text>
-      </View>
+      <SafeAreaView className="flex-1 bg-[#F9FAFB] justify-center items-center p-6">
+        <Text className="text-red-500 text-center text-lg font-medium">
+          {error || "Trilha não encontrada."}
+        </Text>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          className="mt-4 bg-gray-200 px-6 py-3 rounded-full"
+        >
+          <Text className="text-gray-800 font-bold">Voltar</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      <View
-        style={{
-          paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
-          flex: 1,
-        }}
+    <View className="flex-1 bg-[#F9FAFB]">
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 120 }}
+        showsVerticalScrollIndicator={false}
+        bounces={false}
       >
-        <Header title={trail.name} showBackButton={true} />
-        <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
+        {/* HERO IMAGE SECTION */}
+        <View className="relative w-full h-[380px]">
           <ScrollView
             horizontal
             pagingEnabled
             showsHorizontalScrollIndicator={false}
-            className="h-56"
+            className="w-full h-full"
           >
-            {trail.imageUrls?.map((url, index) => (
-              <Image
-                key={index}
-                source={{ uri: url }}
-                className="w-screen h-56 bg-gray-200"
-                resizeMode="cover"
-              />
-            ))}
+            {trail.imageUrls?.length > 0 ? (
+              trail.imageUrls.map((url, index) => (
+                <Image
+                  key={index}
+                  source={{ uri: url }}
+                  className="w-screen h-full bg-gray-300"
+                  resizeMode="cover"
+                />
+              ))
+            ) : (
+              <View className="w-screen h-full bg-green-900 justify-center items-center">
+                <FontAwesome name="image" size={50} color="rgba(255,255,255,0.3)" />
+              </View>
+            )}
           </ScrollView>
 
-          <View className="p-6">
-            <View className="flex-row gap-3 mb-6">
-              <View className="flex-1 bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-                <InfoCard
-                  icon="map-signs"
-                  label="Distância"
-                  value={`${trail.distance} km`}
-                />
-                <View className="border-t border-gray-100 my-3" />
-                <InfoCard
-                  icon="line-chart"
-                  label="Dificuldade"
-                  value={trail.difficulty}
-                />
-                <View className="border-t border-gray-100 my-3" />
-                <InfoCard
-                  icon="check-circle"
-                  label="Status"
-                  value={trail.status}
-                />
-              </View>
-              <View className="flex-1 bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-                <InfoCard
-                  icon="clock-o"
-                  label="Tempo Est."
-                  value={formatTime(trail.estimatedTime)}
-                />
-                <View className="border-t border-gray-100 my-3" />
-                <InfoCard
-                  icon="area-chart"
-                  label="Elevação"
-                  value={`${trail.elevationGain} m`}
-                />
-                <View className="border-t border-gray-100 my-3" />
-                <InfoCard icon="tree" label="Tipo" value={trail.type} />
-              </View>
-            </View>
+          <LinearGradient
+            colors={["rgba(0,0,0,0.6)", "transparent", "rgba(0,0,0,0.8)"]}
+            style={{ position: "absolute", width: "100%", height: "100%" }}
+            pointerEvents="none"
+          />
 
-            <Text className="text-gray-700 text-base leading-relaxed">
-              {trail.description}
-            </Text>
+          <View 
+            className="absolute w-full flex-row justify-between px-4"
+            style={{ top: Platform.OS === 'android' ? (StatusBar.currentHeight || 24) + 16 : 48 }}
+          >
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              className="w-10 h-10 rounded-full bg-black/40 items-center justify-center backdrop-blur-md"
+            >
+              <FontAwesome name="chevron-left" size={16} color="white" />
+            </TouchableOpacity>
           </View>
 
+          <View className="absolute bottom-6 left-6 right-6">
+            <View className="bg-white/20 self-start px-3 py-1 rounded-full backdrop-blur-md mb-2 border border-white/30">
+              <Text className="text-white text-xs font-bold uppercase tracking-wider">
+                {trail.type.toLowerCase()}
+              </Text>
+            </View>
+            <Text className="text-3xl font-black text-white leading-tight text-shadow-md">
+              {trail.name}
+            </Text>
+          </View>
+        </View>
+
+        {/* OVERLAPPING CONTENT SURFACE */}
+        <View className="bg-[#F9FAFB] rounded-t-3xl -mt-6 pt-6 px-4">
+          <Text className="text-gray-600 text-base leading-relaxed px-2 mb-6">
+            {trail.description}
+          </Text>
+
+          {/* 2x2 STATS GRID */}
+          <View className="flex-row px-1">
+            <InfoCard
+              icon="map-signs"
+              label="Distância"
+              value={`${trail.distance} km`}
+              color="#0ea5e9"
+            />
+            <InfoCard
+              icon="clock-o"
+              label="Duração"
+              value={formatTime(trail.estimatedTime)}
+              color="#f59e0b"
+            />
+          </View>
+          <View className="flex-row px-1 mt-1 mb-6">
+            <InfoCard
+              icon="line-chart"
+              label="Dificuldade"
+              value={trail.difficulty.toLowerCase()}
+              color={
+                trail.difficulty === "FACIL"
+                  ? "#16a34a"
+                  : trail.difficulty === "MEDIO"
+                  ? "#d97706"
+                  : "#dc2626"
+              }
+            />
+            <InfoCard
+              icon="area-chart"
+              label="Elevação"
+              value={`${trail.elevationGain} m`}
+              color="#8b5cf6"
+            />
+          </View>
+
+          {/* MAP */}
           {initialRegion && (
-            <View className="px-6">
-              <Text className="text-xl font-bold text-gray-800 mb-4">
+            <View className="mb-8 px-2">
+              <Text className="text-xl font-extrabold text-gray-900 mb-4 tracking-tight">
                 Mapa do Percurso
               </Text>
-              <TrailMap
-                coordinates={trail.coordinates}
-                waypoints={trail.waypoints.map((wp, index) => ({
-                  id: wp.id,
-                  name: wp.name,
-                  description: wp.description,
-                  latitude: wp.coordinate.latitude,
-                  longitude: wp.coordinate.longitude,
-                  imageUrl: wp.imageUrl,
-                  order: wp.order || index + 1,
-                }))}
-                onWaypointPress={(waypoint) => {
-                  if (waypoint.imageUrl) {
-                    openImageModal(waypoint.imageUrl);
-                  }
-                }}
-              />
+              <View className="rounded-3xl overflow-hidden border border-gray-200 shadow-sm">
+                <TrailMap
+                  coordinates={trail.coordinates}
+                  waypoints={trail.waypoints.map((wp, index) => ({
+                    id: wp.id,
+                    name: wp.name,
+                    description: wp.description,
+                    latitude: wp.coordinate.latitude,
+                    longitude: wp.coordinate.longitude,
+                    imageUrl: wp.imageUrl,
+                    order: wp.order || index + 1,
+                  }))}
+                  onWaypointPress={(waypoint) => {
+                    if (waypoint.imageUrl) {
+                      openImageModal(waypoint.imageUrl);
+                    }
+                  }}
+                />
+              </View>
             </View>
           )}
 
-          <View className="p-6">
-            <Text className="text-xl font-bold text-gray-800 mb-4">
-              Pontos de Interesse
-            </Text>
-            {trail.waypoints?.map((waypoint: ApiWaypoint, index: number) => (
-              <View
-                key={waypoint.id}
-                className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-3 flex-row items-start"
-              >
-                <View className="bg-green-100 w-10 h-10 rounded-full items-center justify-center mr-4">
-                  <Text className="text-green-800 font-bold">{index + 1}</Text>
-                </View>
-                <View className="flex-1">
-                  <Text className="text-lg font-bold text-green-800">
-                    {waypoint.name}
-                  </Text>
-                  <Text className="text-gray-600 mt-1">
-                    {waypoint.description}
-                  </Text>
-                  {waypoint.imageUrl && (
-                    <TouchableOpacity
-                      onPress={() => openImageModal(waypoint.imageUrl!)}
-                      className="mt-2"
-                    >
-                      <Image
-                        source={{ uri: waypoint.imageUrl }}
-                        className="w-full h-32 rounded-lg bg-gray-200"
-                        resizeMode="cover"
-                      />
-                    </TouchableOpacity>
-                  )}
-                </View>
-              </View>
-            ))}
-          </View>
-        </ScrollView>
-        <View className="p-6 bg-white border-t border-gray-200">
-          <TouchableOpacity
-            className="bg-green-700 py-4 rounded-lg items-center justify-center"
-            onPress={() =>
-              (navigation as any).navigate("FollowTrail", { trailId: trail.id })
-            }
-          >
-            <Text className="text-white font-bold text-lg">Seguir Trilha</Text>
-          </TouchableOpacity>
-        </View>
+          {/* WAYPOINTS TIMELINE */}
+          {trail.waypoints?.length > 0 && (
+            <View className="px-2 mb-6">
+              <Text className="text-xl font-extrabold text-gray-900 mb-6 tracking-tight">
+                Pontos de Interesse
+              </Text>
+              <View className="pl-4">
+                {trail.waypoints.map((waypoint, index) => (
+                  <View key={waypoint.id} className="relative pl-8 pb-8">
+                    {/* Timeline Line */}
+                    {index !== trail.waypoints.length - 1 && (
+                      <View className="absolute left-[11px] top-8 bottom-0 w-0.5 bg-green-200" />
+                    )}
+                    {/* Timeline Dot */}
+                    <View className="absolute left-0 top-1 w-6 h-6 rounded-full bg-green-100 border-2 border-green-600 items-center justify-center">
+                      <Text className="text-green-800 text-[10px] font-bold">
+                        {index + 1}
+                      </Text>
+                    </View>
 
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={modalVisible}
-          onRequestClose={closeImageModal}
+                    <View className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                      <Text className="text-lg font-black text-gray-900 mb-1">
+                        {waypoint.name}
+                      </Text>
+                      <Text className="text-gray-500 text-sm leading-relaxed">
+                        {waypoint.description}
+                      </Text>
+                      {waypoint.imageUrl && (
+                        <TouchableOpacity
+                          onPress={() => openImageModal(waypoint.imageUrl!)}
+                          className="mt-3"
+                          activeOpacity={0.9}
+                        >
+                          <Image
+                            source={{ uri: waypoint.imageUrl }}
+                            className="w-full h-36 rounded-xl bg-gray-200"
+                            resizeMode="cover"
+                          />
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+        </View>
+      </ScrollView>
+
+      {/* FLOATING ACTION BUTTON BAR (THUMB ZONE) */}
+      <LinearGradient
+        colors={["transparent", "rgba(249, 250, 251, 0.9)", "#F9FAFB"]}
+        className="absolute bottom-0 left-0 right-0 pt-10 pb-6 px-6"
+      >
+        <TouchableOpacity
+          className="bg-green-700 py-4 rounded-full items-center justify-center shadow-lg flex-row"
+          style={{ shadowColor: "#15803d", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 5 }}
+          activeOpacity={0.9}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            (navigation as any).navigate("FollowTrail", { trailId: trail.id });
+          }}
         >
-          <View className="flex-1 justify-center items-center bg-black/80">
-            <TouchableOpacity
-              className="absolute top-10 right-6 z-10"
-              onPress={closeImageModal}
-            >
-              <FontAwesome name="close" size={30} color="white" />
-            </TouchableOpacity>
-            <Image
-              source={{ uri: selectedImage || "" }}
-              className="w-11/12 h-3/4"
-              resizeMode="contain"
-            />
-          </View>
-        </Modal>
-      </View>
-    </SafeAreaView>
+          <FontAwesome name="play" size={18} color="white" className="mr-3" />
+          <Text className="text-white font-black text-lg tracking-wide ml-2">
+            SEGUIR TRILHA
+          </Text>
+        </TouchableOpacity>
+      </LinearGradient>
+
+      {/* IMAGE MODAL */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={closeImageModal}
+      >
+        <View className="flex-1 justify-center items-center bg-black/90">
+          <TouchableOpacity
+            className="absolute top-12 right-6 z-10 bg-white/20 w-10 h-10 rounded-full items-center justify-center"
+            onPress={closeImageModal}
+          >
+            <FontAwesome name="close" size={20} color="white" />
+          </TouchableOpacity>
+          <Image
+            source={{ uri: selectedImage || "" }}
+            className="w-full h-3/4"
+            resizeMode="contain"
+          />
+        </View>
+      </Modal>
+    </View>
   );
 }

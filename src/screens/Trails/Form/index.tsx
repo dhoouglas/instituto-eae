@@ -11,6 +11,7 @@ import {
   FlatList,
   Modal,
   Image,
+  Alert,
 } from "react-native";
 import { Feather, FontAwesome } from "@expo/vector-icons";
 import { useForm, Controller } from "react-hook-form";
@@ -21,12 +22,13 @@ import * as ImagePicker from "expo-image-picker";
 import { useAuth, useUser } from "@clerk/clerk-expo";
 import Toast from "react-native-toast-message";
 import { isAxiosError } from "axios";
+import { LinearGradient } from "expo-linear-gradient";
+import * as Haptics from "expo-haptics";
 
 import { AppNavigatorRoutesProps } from "@/routes/types";
 import api from "@/lib/api";
 import { useStorage } from "@/hooks/useStorage";
 
-import { Header } from "@/components/Header";
 import { TrailMap } from "@/components/TrailMap";
 import { Input } from "@/components/Input";
 import { Button } from "@/components/Button";
@@ -77,9 +79,6 @@ const trailSchema = z.object({
 });
 
 type TrailFormData = z.infer<typeof trailSchema>;
-type Difficulty = "FACIL" | "MEDIO" | "DIFICIL";
-type TrailType = "CAMINHADA" | "CICLISMO" | "MISTA";
-type TrailStatus = "ABERTA" | "FECHADA" | "MANUTENCAO";
 
 export function TrailForm() {
   const route = useRoute();
@@ -132,10 +131,10 @@ export function TrailForm() {
       const initialWaypoints = draftWaypointOrders.reduce(
         (acc, order) => {
           const prefill = draftWaypointsData?.[order];
-          acc[order] = { 
-            ...EMPTY_WAYPOINT_DATA, 
-            name: prefill?.name || "", 
-            description: prefill?.description || "" 
+          acc[order] = {
+            ...EMPTY_WAYPOINT_DATA,
+            name: prefill?.name || "",
+            description: prefill?.description || ""
           };
           return acc;
         },
@@ -156,6 +155,7 @@ export function TrailForm() {
     latitude: number;
     longitude: number;
   }) => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     const newCoordinates = [...trailPath, coordinate];
     const newWaypointOrder = newCoordinates.length;
 
@@ -182,6 +182,7 @@ export function TrailForm() {
   };
 
   const handleUndo = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (trailPath.length === 0) return;
 
     const lastPointOrder = trailPath.length;
@@ -264,7 +265,7 @@ export function TrailForm() {
   }, [isEditing, trailId, reset]);
 
   const onSubmit = async (data: TrailFormData) => {
-    // 1. Validação
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     if (imageAssets.length === 0 && existingImageUrls.length === 0) {
       Toast.show({
         type: "error",
@@ -275,7 +276,6 @@ export function TrailForm() {
 
     const waypointEntries = Object.entries(waypointsDataRef.current)
       .map(([order, data]) => {
-        // Ignore waypoints that are completely empty
         if (!data.name && !data.description && !data.image) {
           return null;
         }
@@ -298,7 +298,6 @@ export function TrailForm() {
     try {
       const token = await getToken({ template: "api-testing-token" });
 
-      // 2. Upload de imagens da trilha
       const uploadedTrailImageUrls: string[] = [];
       for (const asset of imageAssets) {
         const url = await uploadImage(asset);
@@ -309,14 +308,12 @@ export function TrailForm() {
         }
       }
 
-      // 3. Preparar o trajeto completo com a ordem correta para o mapa
       const finalCoordinates = data.coordinates.map((coord, index) => ({
         latitude: coord.latitude,
         longitude: coord.longitude,
         order: index + 1,
       }));
 
-      // 4. Preparar payload dos Waypoints com base nas coordenadas originais
       const waypointsPayload = await Promise.all(
         waypointOrders.map(async (order) => {
           const waypointData = waypointsDataRef.current[order];
@@ -342,12 +339,11 @@ export function TrailForm() {
             name: waypointData.name,
             description: waypointData.description || undefined,
             imageUrl: waypointImageUrl || undefined,
-            order: order, // O backend exige que order = coordinate.order
+            order: order,
           };
         })
       ).then(results => results.filter(Boolean));
 
-      // 5. Criar/Atualizar a trilha com os dados corretos
       const trailPayload = {
         ...data,
         imageUrls: [...existingImageUrls, ...uploadedTrailImageUrls],
@@ -355,19 +351,15 @@ export function TrailForm() {
         waypoints: waypointsPayload,
       };
 
-      console.log(
-        "Enviando para a API:",
-        JSON.stringify(trailPayload, null, 2)
-      );
-
       const response = isEditing
         ? await api.put(`/trails/${trailId}`, trailPayload, {
-            headers: { Authorization: `Bearer ${token}` },
-          })
+          headers: { Authorization: `Bearer ${token}` },
+        })
         : await api.post("/trails", trailPayload, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       Toast.show({
         type: "success",
         text1: "Sucesso!",
@@ -375,6 +367,7 @@ export function TrailForm() {
       });
       navigation.navigate("trails", { screen: "TrailList" });
     } catch (error) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       let message = "Não foi possível salvar a trilha.";
       if (isAxiosError(error) && error.response?.data?.message) {
         message = error.response.data.message;
@@ -389,19 +382,30 @@ export function TrailForm() {
 
   const FormSection = ({
     title,
+    icon,
     children,
   }: {
     title: string;
+    icon?: React.ReactNode;
     children: React.ReactNode;
   }) => (
-    <View className="bg-white p-4 rounded-xl shadow-sm mb-6">
-      <Text className="text-lg font-bold text-gray-800 mb-3">{title}</Text>
+    <View className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 mb-6">
+      <View className="flex-row items-center mb-4">
+        {icon && <View className="w-8 h-8 rounded-full bg-green-50 items-center justify-center mr-3">{icon}</View>}
+        <Text className="text-xl font-extrabold text-gray-900 tracking-tight">{title}</Text>
+      </View>
       {children}
     </View>
   );
 
+  const Label = ({ text }: { text: string }) => (
+    <Text className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">
+      {text}
+    </Text>
+  );
+
   return (
-    <SafeAreaView className="flex-1 bg-gray-100">
+    <SafeAreaView className="flex-1 bg-[#F9FAFB]">
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
@@ -415,23 +419,36 @@ export function TrailForm() {
             flex: 1,
           }}
         >
-          <Header
-            title={isEditing ? "Editar Trilha" : "Nova Trilha"}
-            showBackButton={true}
-          />
+          {/* PREMIUM HEADER */}
+          <View className="px-6 pt-6 pb-4 flex-row items-center justify-between bg-[#F9FAFB] z-10">
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              className="w-10 h-10 rounded-full bg-white items-center justify-center shadow-sm border border-gray-200"
+              activeOpacity={0.8}
+            >
+              <FontAwesome name="chevron-left" size={16} color="#374151" />
+            </TouchableOpacity>
+            <View className="flex-1 ml-4">
+              <Text className="text-2xl font-black text-gray-900 tracking-tight">
+                {isEditing ? "Editar Trilha" : "Nova Trilha"}
+              </Text>
+            </View>
+          </View>
+
           <ScrollView
             contentContainerStyle={{
-              paddingHorizontal: 16,
-              paddingTop: 16,
-              paddingBottom: 100,
+              paddingHorizontal: 20,
+              paddingTop: 8,
+              paddingBottom: 150,
             }}
             showsVerticalScrollIndicator={false}
           >
-            <FormSection title="Informações Básicas">
-              <View>
-                <Text className="text-base font-semibold text-gray-700 mb-1">
-                  Nome da Trilha
-                </Text>
+            <FormSection
+              title="Informações Básicas"
+              icon={<FontAwesome name="pencil" size={14} color="#166534" />}
+            >
+              <View className="mb-4">
+                <Label text="Nome da Trilha" />
                 <Controller
                   control={control}
                   name="name"
@@ -445,41 +462,37 @@ export function TrailForm() {
                   )}
                 />
                 {errors.name && (
-                  <Text className="text-red-500 mt-1">
-                    {errors.name.message}
-                  </Text>
+                  <Text className="text-red-500 text-xs mt-1 ml-1 font-medium">{errors.name.message}</Text>
                 )}
               </View>
-              <View className="h-4" />
               <View>
-                <Text className="text-base font-semibold text-gray-700 mb-1">
-                  Descrição
-                </Text>
+                <Label text="Descrição" />
                 <Controller
                   control={control}
                   name="description"
                   render={({ field: { onChange, onBlur, value } }) => (
                     <Input
-                      placeholder="Descreva os detalhes da trilha..."
+                      placeholder="Descreva os detalhes da aventura..."
                       onBlur={onBlur}
                       onChangeText={onChange}
                       value={value}
                       multiline
-                      numberOfLines={8}
+                      numberOfLines={6}
                       textAlignVertical="top"
-                      className="h-32"
+                      className="h-28 pt-3"
                     />
                   )}
                 />
                 {errors.description && (
-                  <Text className="text-red-500 mt-1">
-                    {errors.description.message}
-                  </Text>
+                  <Text className="text-red-500 text-xs mt-1 ml-1 font-medium">{errors.description.message}</Text>
                 )}
               </View>
             </FormSection>
 
-            <FormSection title="Imagens da Trilha">
+            <FormSection
+              title="Galeria"
+              icon={<FontAwesome name="image" size={14} color="#166534" />}
+            >
               <ImagePickerComponent
                 assets={imageAssets}
                 onAssetsChange={setImageAssets}
@@ -488,139 +501,133 @@ export function TrailForm() {
               />
             </FormSection>
 
-            <FormSection title="Traçado da Trilha">
-              <TrailMap
-                coordinates={trailPath}
-                waypoints={
-                  waypointOrders
-                    ?.map((order, index) => {
-                      const waypointData = waypointsDataRef.current[order];
-                      const coordinate = trailPath[order - 1];
+            <FormSection
+              title="Traçado do Percurso"
+              icon={<FontAwesome name="map" size={14} color="#166534" />}
+            >
+              <View className="rounded-2xl overflow-hidden border border-gray-200">
+                <TrailMap
+                  coordinates={trailPath}
+                  waypoints={
+                    waypointOrders
+                      ?.map((order, index) => {
+                        const waypointData = waypointsDataRef.current[order];
+                        const coordinate = trailPath[order - 1];
 
-                      if (!waypointData || !coordinate) return null;
+                        if (!waypointData || !coordinate) return null;
 
-                      let imageUrl = waypointData.existingImageUrl;
-                      if (waypointData.image) {
-                        imageUrl = (waypointData.image as any).uri;
-                      }
+                        let imageUrl = waypointData.existingImageUrl;
+                        if (waypointData.image) {
+                          imageUrl = (waypointData.image as any).uri;
+                        }
 
-                      return {
-                        id: waypointData.id || String(order),
-                        name: waypointData.name,
-                        description: waypointData.description,
-                        latitude: coordinate.latitude,
-                        longitude: coordinate.longitude,
-                        order: index + 1,
-                        imageUrl: imageUrl,
-                      };
-                    })
-                    .filter(Boolean) as any[]
-                }
-                isEditing={isAdmin}
-                interactionMode={mapInteractionMode}
-                onInteractionModeChange={setMapInteractionMode}
-                onCoordinatesChange={(newCoords) =>
-                  setValue("coordinates", newCoords, { shouldValidate: true })
-                }
-                onAddWaypoint={handleAddWaypoint}
-                onWaypointPress={(waypoint) => {
-                  if (waypoint.imageUrl) {
-                    setPreviewImageUrl(waypoint.imageUrl);
-                    setPreviewModalVisible(true);
+                        return {
+                          id: waypointData.id || String(order),
+                          name: waypointData.name,
+                          description: waypointData.description,
+                          latitude: coordinate.latitude,
+                          longitude: coordinate.longitude,
+                          order: index + 1,
+                          imageUrl: imageUrl,
+                        };
+                      })
+                      .filter(Boolean) as any[]
                   }
-                }}
-                onUndo={handleUndo}
-              />
+                  isEditing={isAdmin}
+                  interactionMode={mapInteractionMode}
+                  onInteractionModeChange={(mode) => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setMapInteractionMode(mode);
+                  }}
+                  onCoordinatesChange={(newCoords) =>
+                    setValue("coordinates", newCoords, { shouldValidate: true })
+                  }
+                  onAddWaypoint={handleAddWaypoint}
+                  onWaypointPress={(waypoint) => {
+                    if (waypoint.imageUrl) {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      setPreviewImageUrl(waypoint.imageUrl);
+                      setPreviewModalVisible(true);
+                    } else if (waypoint.description) {
+                      Alert.alert(waypoint.name || `Ponto #${waypoint.order}`, waypoint.description);
+                    }
+                  }}
+                  onUndo={handleUndo}
+                />
+              </View>
               {errors.coordinates && (
-                <Text className="text-red-500 mt-1">
-                  {errors.coordinates.message}
-                </Text>
+                <Text className="text-red-500 text-xs mt-2 ml-1 font-medium">{errors.coordinates.message}</Text>
               )}
             </FormSection>
 
             {waypointOrders && waypointOrders.length > 0 && (
-              <FormSection title="Pontos de Interesse">
+              <FormSection
+                title="Pontos de Interesse"
+                icon={<FontAwesome name="map-marker" size={14} color="#166534" />}
+              >
                 <FlatList
                   data={waypointOrders}
                   keyExtractor={(item) => item.toString()}
                   renderItem={({ item: order, index }) => (
-                    <WaypointForm
-                      order={order}
-                      displayOrder={index + 1}
-                      initialData={
-                        waypointsDataRef.current[order] || EMPTY_WAYPOINT_DATA
-                      }
-                      onDataChange={handleWaypointChange}
-                    />
+                    <View className="mb-4 bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                      <WaypointForm
+                        order={order}
+                        displayOrder={index + 1}
+                        initialData={
+                          waypointsDataRef.current[order] || EMPTY_WAYPOINT_DATA
+                        }
+                        onDataChange={handleWaypointChange}
+                      />
+                    </View>
                   )}
-                  // Opcional: para evitar que a FlatList tenha seu próprio scroll
-                  // se a ScrollView principal já cuida disso.
                   scrollEnabled={false}
                 />
               </FormSection>
             )}
 
-            <FormSection title="Detalhes da Trilha">
-              <View>
-                <Text className="text-base font-semibold text-gray-700 mb-1">
-                  Distância (km)
-                </Text>
-                <Controller
-                  control={control}
-                  name="distance"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <Input
-                      placeholder="Ex: 5.2"
-                      onBlur={onBlur}
-                      onChangeText={onChange}
-                      value={
-                        value === undefined || value === null
-                          ? ""
-                          : String(value)
-                      }
-                      keyboardType="numeric"
-                    />
-                  )}
-                />
-                {errors.distance && (
-                  <Text className="text-red-500 mt-1">
-                    {errors.distance.message}
-                  </Text>
-                )}
+            <FormSection
+              title="Especificações Técnicas"
+              icon={<FontAwesome name="list-alt" size={14} color="#166534" />}
+            >
+              <View className="flex-row gap-4 mb-4">
+                <View className="flex-1">
+                  <Label text="Distância (km)" />
+                  <Controller
+                    control={control}
+                    name="distance"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <Input
+                        placeholder="Ex: 5.2"
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value === undefined || value === null ? "" : String(value)}
+                        keyboardType="numeric"
+                      />
+                    )}
+                  />
+                  {errors.distance && <Text className="text-red-500 text-xs mt-1 ml-1 font-medium">{errors.distance.message}</Text>}
+                </View>
+                <View className="flex-1">
+                  <Label text="Tempo (min)" />
+                  <Controller
+                    control={control}
+                    name="estimatedTime"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <Input
+                        placeholder="Ex: 120"
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value === undefined || value === null ? "" : String(value)}
+                        keyboardType="numeric"
+                      />
+                    )}
+                  />
+                  {errors.estimatedTime && <Text className="text-red-500 text-xs mt-1 ml-1 font-medium">{errors.estimatedTime.message}</Text>}
+                </View>
               </View>
-              <View className="h-4" />
-              <View>
-                <Text className="text-base font-semibold text-gray-700 mb-1">
-                  Duração Estimada (minutos)
-                </Text>
-                <Controller
-                  control={control}
-                  name="estimatedTime"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <Input
-                      placeholder="Ex: 120"
-                      onBlur={onBlur}
-                      onChangeText={onChange}
-                      value={
-                        value === undefined || value === null
-                          ? ""
-                          : String(value)
-                      }
-                      keyboardType="numeric"
-                    />
-                  )}
-                />
-                {errors.estimatedTime && (
-                  <Text className="text-red-500 mt-1">
-                    {errors.estimatedTime.message}
-                  </Text>
-                )}
-              </View>
-              <View className="h-4" />
-              <View>
-                <Text className="text-base font-semibold text-gray-700 mb-1">
-                  Ganho de Elevação (metros)
-                </Text>
+
+              <View className="mb-6">
+                <Label text="Elevação (m)" />
                 <Controller
                   control={control}
                   name="elevationGain"
@@ -629,133 +636,119 @@ export function TrailForm() {
                       placeholder="Ex: 450"
                       onBlur={onBlur}
                       onChangeText={onChange}
-                      value={
-                        value === undefined || value === null
-                          ? ""
-                          : String(value)
-                      }
+                      value={value === undefined || value === null ? "" : String(value)}
                       keyboardType="numeric"
                     />
                   )}
                 />
-                {errors.elevationGain && (
-                  <Text className="text-red-500 mt-1">
-                    {errors.elevationGain.message}
-                  </Text>
-                )}
+                {errors.elevationGain && <Text className="text-red-500 text-xs mt-1 ml-1 font-medium">{errors.elevationGain.message}</Text>}
               </View>
-              <View className="h-4" />
-              <Text className="text-base font-semibold text-gray-700 mb-1">
-                Dificuldade
-              </Text>
-              <Controller
-                control={control}
-                name="difficulty"
-                render={({ field }) => (
-                  <OptionSelector
-                    selectedValue={field.value}
-                    onSelect={field.onChange}
-                    options={[
-                      {
-                        value: "FACIL",
-                        label: "Fácil",
-                        icon: "sentiment-very-satisfied",
-                      },
-                      {
-                        value: "MEDIO",
-                        label: "Médio",
-                        icon: "sentiment-neutral",
-                      },
-                      {
-                        value: "DIFICIL",
-                        label: "Difícil",
-                        icon: "sentiment-very-dissatisfied",
-                      },
-                    ]}
-                  />
-                )}
-              />
-              {errors.difficulty && (
-                <Text className="text-red-500 mt-1">
-                  {errors.difficulty.message}
-                </Text>
-              )}
-              <View className="h-4" />
-              <Text className="text-base font-semibold text-gray-700 mb-1">
-                Tipo de Trilha
-              </Text>
-              <Controller
-                control={control}
-                name="type"
-                render={({ field }) => (
-                  <OptionSelector
-                    selectedValue={field.value}
-                    onSelect={field.onChange}
-                    options={[
-                      { value: "CAMINHADA", label: "Caminhada" },
-                      { value: "CICLISMO", label: "Ciclismo" },
-                      { value: "MISTA", label: "Mista" },
-                    ]}
-                  />
-                )}
-              />
-              {errors.type && (
-                <Text className="text-red-500 mt-1">{errors.type.message}</Text>
-              )}
-              <View className="h-4" />
-              <Text className="text-base font-semibold text-gray-700 mb-1 ">
-                Status da Trilha
-              </Text>
-              <Controller
-                control={control}
-                name="status"
-                render={({ field }) => (
-                  <OptionSelector
-                    selectedValue={field.value}
-                    onSelect={field.onChange}
-                    options={[
-                      { value: "ABERTA", label: "Aberta" },
-                      { value: "FECHADA", label: "Fechada" },
-                      { value: "MANUTENCAO", label: "Manutenção" },
-                    ]}
-                  />
-                )}
-              />
-              {errors.status && (
-                <Text className="text-red-500 mt-1">
-                  {errors.status.message}
-                </Text>
-              )}
+
+              <View className="mb-6">
+                <Label text="Dificuldade" />
+                <Controller
+                  control={control}
+                  name="difficulty"
+                  render={({ field }) => (
+                    <OptionSelector
+                      selectedValue={field.value}
+                      onSelect={(val) => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        field.onChange(val);
+                      }}
+                      options={[
+                        { value: "FACIL", label: "Fácil", icon: "leaf" },
+                        { value: "MEDIO", label: "Médio", icon: "fire" },
+                        { value: "DIFICIL", label: "Difícil", icon: "lightning-bolt" },
+                      ]}
+                    />
+                  )}
+                />
+                {errors.difficulty && <Text className="text-red-500 text-xs mt-1 ml-1 font-medium">{errors.difficulty.message}</Text>}
+              </View>
+
+              <View className="mb-6">
+                <Label text="Tipo de Trilha" />
+                <Controller
+                  control={control}
+                  name="type"
+                  render={({ field }) => (
+                    <OptionSelector
+                      selectedValue={field.value}
+                      onSelect={(val) => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        field.onChange(val);
+                      }}
+                      options={[
+                        { value: "CAMINHADA", label: "Caminhada", icon: "walk" },
+                        { value: "CICLISMO", label: "Ciclismo", icon: "bike" },
+                        { value: "MISTA", label: "Mista", icon: "shuffle" },
+                      ]}
+                    />
+                  )}
+                />
+                {errors.type && <Text className="text-red-500 text-xs mt-1 ml-1 font-medium">{errors.type.message}</Text>}
+              </View>
+
+              <View>
+                <Label text="Status" />
+                <Controller
+                  control={control}
+                  name="status"
+                  render={({ field }) => (
+                    <OptionSelector
+                      selectedValue={field.value}
+                      onSelect={(val) => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        field.onChange(val);
+                      }}
+                      options={[
+                        { value: "ABERTA", label: "Aberta", icon: "check-circle" },
+                        { value: "FECHADA", label: "Fechada", icon: "close-circle" },
+                        { value: "MANUTENCAO", label: "Manutenção", icon: "wrench" },
+                      ]}
+                    />
+                  )}
+                />
+                {errors.status && <Text className="text-red-500 text-xs mt-1 ml-1 font-medium">{errors.status.message}</Text>}
+              </View>
             </FormSection>
           </ScrollView>
 
-          <View className="absolute bottom-0 left-0 right-0 p-4 bg-gray-100 border-t border-gray-200">
+          {/* THUMB ZONE SAVE BUTTON */}
+          <View className="absolute bottom-6 left-6 right-6">
             <Button
               title={isEditing ? "Salvar Alterações" : "Criar Trilha"}
               onPress={handleSubmit(onSubmit)}
               isLoading={isSubmitting || isUploading || isLoading}
-              className="w-full h-14 bg-green-800 rounded-xl justify-center items-center"
-              textClassName="text-white font-bold text-lg"
+              className="w-full h-14 bg-green-700 rounded-full justify-center items-center shadow-lg"
+              style={{ shadowColor: "#15803d", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 5 }}
+              textClassName="text-white font-black text-lg tracking-wide"
             />
           </View>
         </View>
       </KeyboardAvoidingView>
+
+      {/* PREVIEW MODAL */}
       <Modal
-        animationType="slide"
+        animationType="fade"
         transparent={true}
         visible={isPreviewModalVisible}
         onRequestClose={() => setPreviewModalVisible(false)}
       >
-        <View className="flex-1 justify-center items-center bg-black/80">
+        <View className="flex-1 justify-center items-center bg-black/90">
           <TouchableOpacity
-            className="absolute top-10 right-6 z-10"
-            onPress={() => setPreviewModalVisible(false)}
+            className="absolute top-12 right-6 z-10 bg-white/20 w-10 h-10 rounded-full items-center justify-center"
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setPreviewModalVisible(false);
+            }}
           >
-            <FontAwesome name="close" size={30} color="white" />
+            <FontAwesome name="close" size={20} color="white" />
           </TouchableOpacity>
           <Image
             source={{ uri: previewImageUrl || "" }}
-            className="w-11/12 h-3/4"
+            className="w-full h-3/4"
             resizeMode="contain"
           />
         </View>
