@@ -1,5 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import * as Location from "expo-location";
+import {
+  LOCATION_TASK_NAME,
+  registerLocationCallback,
+  unregisterLocationCallback,
+} from "@/tasks/locationTask";
 
 interface LocationOptions {
   enabled: boolean;
@@ -15,43 +20,89 @@ export const useLocation = ({
   onError,
 }: LocationOptions) => {
   const [hasPermission, setHasPermission] = useState(false);
-  const watcher = useRef<Location.LocationSubscription | null>(null);
+  // Foreground watcher — used only when requestBackground=false
+  const foregroundWatcher = useRef<Location.LocationSubscription | null>(null);
 
+  // --- Permission request (runs once) ---
   useEffect(() => {
-    // Evita pedir permissão em loop se o componente pai re-renderizar
     if (hasPermission) return;
 
     const requestPermissions = async () => {
       const { status: foregroundStatus } =
         await Location.requestForegroundPermissionsAsync();
-      
+
       if (foregroundStatus !== "granted") {
-        if (onError) onError("A permissão para acessar a localização foi negada.");
-        setHasPermission(false);
+        onError?.("A permissão para acessar a localização foi negada.");
         return;
       }
 
-      // Se chegamos aqui, a localização básica (Foreground) foi permitida.
-      setHasPermission(true);
-
       if (requestBackground) {
-        // Pedimos background separadamente, mas não bloqueamos se for negado.
         const { status: backgroundStatus } =
           await Location.requestBackgroundPermissionsAsync();
+
         if (backgroundStatus !== "granted") {
           console.warn("Permissão de localização em segundo plano negada.");
+          // Still allow foreground tracking
         }
       }
+
+      setHasPermission(true);
     };
 
     requestPermissions();
-  }, [requestBackground, hasPermission]); // Removido onError para não disparar re-render em loop
+  }, [requestBackground, hasPermission]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // --- Location tracking ---
   useEffect(() => {
     let isMounted = true;
 
-    if (enabled && hasPermission) {
-      const startWatching = async () => {
+    if (!enabled || !hasPermission) {
+      // Stop whatever is running
+      if (foregroundWatcher.current) {
+        foregroundWatcher.current.remove();
+        foregroundWatcher.current = null;
+      }
+      Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME)
+        .then((started) => {
+          if (started) Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+        })
+        .catch(() => { });
+      unregisterLocationCallback();
+      return;
+    }
+
+    if (requestBackground) {
+      // --- Background mode: uses TaskManager task ---
+      const startBackground = async () => {
+        try {
+          const alreadyRunning =
+            await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
+          if (!alreadyRunning) {
+            await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+              accuracy: Location.Accuracy.BestForNavigation,
+              timeInterval: 1000,
+              distanceInterval: 1,
+              // Show a foreground notification on Android while in background
+              foregroundService: {
+                notificationTitle: "EAE — Rastreamento ativo",
+                notificationBody:
+                  "Sua localização está sendo registrada em segundo plano.",
+                notificationColor: "#16a34a",
+              },
+              // iOS: pause updates only when clearly stationary
+              pausesUpdatesAutomatically: false,
+              showsBackgroundLocationIndicator: true,
+            });
+          }
+          if (isMounted) registerLocationCallback(onLocationUpdate);
+        } catch (err) {
+          console.error("[useLocation] Erro ao iniciar background:", err);
+        }
+      };
+      startBackground();
+    } else {
+      // --- Foreground mode: uses watchPositionAsync ---
+      const startForeground = async () => {
         const sub = await Location.watchPositionAsync(
           {
             accuracy: Location.Accuracy.BestForNavigation,
@@ -62,29 +113,36 @@ export const useLocation = ({
             if (isMounted) onLocationUpdate(location);
           }
         );
-        
+
         if (!isMounted) {
           sub.remove();
         } else {
-          watcher.current = sub;
+          foregroundWatcher.current = sub;
         }
       };
-      startWatching();
-    } else {
-      if (watcher.current) {
-        watcher.current.remove();
-        watcher.current = null;
-      }
+      startForeground();
     }
 
     return () => {
       isMounted = false;
-      if (watcher.current) {
-        watcher.current.remove();
-        watcher.current = null;
+
+      // Cleanup foreground watcher
+      if (foregroundWatcher.current) {
+        foregroundWatcher.current.remove();
+        foregroundWatcher.current = null;
+      }
+
+      // Cleanup background task
+      if (requestBackground) {
+        unregisterLocationCallback();
+        Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME)
+          .then((started) => {
+            if (started) Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+          })
+          .catch(() => { });
       }
     };
-  }, [enabled, hasPermission, onLocationUpdate]);
+  }, [enabled, hasPermission, requestBackground, onLocationUpdate]);
 
   return { hasPermission };
 };
