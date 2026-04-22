@@ -34,9 +34,12 @@ export type TrailStackParamList = {
   FollowTrail: { trailId: string };
   TrailForm: {
     trailId?: string;
-    coordinates?: { latitude: number; longitude: number }[];
+    coordinates?: { latitude: number; longitude: number; altitude?: number | null }[];
     waypointOrders?: number[];
-    duration?: number;
+    waypointsData?: Record<number, { name: string; description: string }>;
+    distance?: number;
+    estimatedTime?: number;
+    elevationGain?: number;
   };
 };
 

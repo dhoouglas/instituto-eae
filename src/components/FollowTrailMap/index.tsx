@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   View,
   Text,
@@ -50,7 +50,7 @@ interface FollowTrailMapProps {
 }
 
 export function FollowTrailMap({
-  coordinates,
+  coordinates: originalCoordinates,
   waypoints,
   userLocation,
   isStarted,
@@ -74,8 +74,29 @@ export function FollowTrailMap({
   const [showFarFromStartBanner, setShowFarFromStartBanner] = useState(false);
   const [userPath, setUserPath] = useState<Coordinate[]>([]);
   const [hasLeftStartArea, setHasLeftStartArea] = useState(false);
+  const [isReversed, setIsReversed] = useState(false);
+  const [reachedEnd, setReachedEnd] = useState(false);
   const hasGoneOffTrack = useRef(false);
   const hasReachedTrail = useRef(false);
+  const hasReportedFinish = useRef(false);
+
+  const coordinates = useMemo(
+    () => (isReversed ? [...originalCoordinates].reverse() : originalCoordinates),
+    [isReversed, originalCoordinates]
+  );
+
+  const handleReverseTrail = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    setIsReversed((prev) => !prev);
+    setUserPath([]);
+    setTime(0);
+    setVisitedWaypoints(new Set());
+    setHasLeftStartArea(false);
+    setReachedEnd(false);
+    hasGoneOffTrack.current = false;
+    hasReachedTrail.current = false;
+    hasReportedFinish.current = false;
+  };
 
   // Animation refs
   const bottomSheetTranslateY = useRef(new Animated.Value(400)).current;
@@ -116,10 +137,20 @@ export function FollowTrailMap({
     );
 
     if (distanceToEnd < 20 && hasLeftStartArea) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Alert.alert("Parabéns!", "Você finalizou a trilha.", [
-        { text: "OK", onPress: onFinish },
-      ]);
+      if (!hasReportedFinish.current) {
+        hasReportedFinish.current = true;
+        setReachedEnd(true);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Alert.alert(
+          "Chegou ao término da trilha",
+          "Parabéns! Você alcançou o destino final da trilha. Deseja finalizar agora?",
+          [
+            { text: "Ver mapa / Continuar", style: "cancel" },
+            { text: "Fazer Caminho Reverso", onPress: handleReverseTrail },
+            { text: "Finalizar Trilha", onPress: onFinish, style: "destructive" },
+          ]
+        );
+      }
     }
   }, [userLocation, coordinates, isStarted, onFinish, hasLeftStartArea]);
 
@@ -305,6 +336,13 @@ export function FollowTrailMap({
       .join(":");
   };
 
+  const formatDistance = (distMeters: number) => {
+    if (distMeters >= 1000) {
+      return `${(distMeters / 1000).toFixed(1)} km`;
+    }
+    return `${Math.round(distMeters)}m`;
+  };
+
   const handlePause = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     onPause();
@@ -336,12 +374,57 @@ export function FollowTrailMap({
         { latitude: userLocation.latitude, longitude: userLocation.longitude },
         coordinates[0]
       );
+
+      const distToEnd = getDistance(
+        { latitude: userLocation.latitude, longitude: userLocation.longitude },
+        coordinates[coordinates.length - 1]
+      );
+
       if (distToStart > PROXIMITY_THRESHOLD_METERS) {
+        if (distToEnd <= PROXIMITY_THRESHOLD_METERS && !isReversed) {
+          Alert.alert(
+            "Final da trilha detectado",
+            "Você está próximo ao destino final. Deseja iniciar o rastreamento fazendo o Caminho Reverso?",
+            [
+              { text: "Cancelar", style: "cancel" },
+              {
+                text: "Iniciar Retorno", onPress: () => {
+                  handleReverseTrail();
+                  onStart();
+                  if (mapRef.current) {
+                    mapRef.current.animateToRegion({
+                      latitude: userLocation.latitude,
+                      longitude: userLocation.longitude,
+                      latitudeDelta: 0.002,
+                      longitudeDelta: 0.002,
+                    }, 1000);
+                  }
+                }
+              }
+            ]
+          );
+          return;
+        }
+
         Alert.alert(
           "Longe do início",
-          `Você está a ${Math.round(distToStart)}m do início da trilha. Dirija-se ao ponto de partida (marcador verde) para começar.`
+          `Você está a ${formatDistance(distToStart)} do início da trilha. Dirija-se ao ponto de partida (marcador verde) para começar.`
         );
         return;
+      } else if (distToStart <= 20) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Alert.alert(
+          "Siga a trilha!",
+          "Você está no ponto de partida e iniciou a trilha.",
+          [{ text: "OK" }]
+        );
+      } else {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Alert.alert(
+          "Trilha Iniciada",
+          "Dirija-se ao ponto de partida (marcador verde) e siga o caminho indicado.",
+          [{ text: "OK" }]
+        );
       }
     }
 
@@ -419,7 +502,7 @@ export function FollowTrailMap({
           <Polyline
             coordinates={userPath}
             strokeColor={isOnTrack ? "#10B981" : "#ef4444"}
-            strokeWidth={4}
+            strokeWidth={6}
             zIndex={2}
           />
         )}
@@ -570,6 +653,17 @@ export function FollowTrailMap({
               >
                 <FontAwesome name="stop" size={24} color="white" />
               </TouchableOpacity>
+
+              {/* REVERSE PATH */}
+              {reachedEnd && (
+                <TouchableOpacity
+                  onPress={handleReverseTrail}
+                  className="w-16 h-16 rounded-full bg-blue-600 items-center justify-center shadow-lg border-2 border-white"
+                  activeOpacity={0.8}
+                >
+                  <FontAwesome name="exchange" size={24} color="white" />
+                </TouchableOpacity>
+              )}
             </>
           )}
         </View>

@@ -21,6 +21,7 @@ import * as Haptics from "expo-haptics";
 type LocationCoord = {
   latitude: number;
   longitude: number;
+  altitude?: number | null;
 };
 
 export function RecordTrailScreen() {
@@ -132,6 +133,42 @@ export function RecordTrailScreen() {
     }
     pause(); // Garante que o cronômetro pare ao finalizar
     setDuration(time); // Salva o tempo final
+
+    const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+      const R = 6371e3;
+      const φ1 = (lat1 * Math.PI) / 180;
+      const φ2 = (lat2 * Math.PI) / 180;
+      const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+      const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+      const a =
+        Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+        Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    };
+
+    let totalDistance = 0;
+    let elevationGain = 0;
+    let lastEle: number | null = null;
+
+    for (let i = 0; i < path.length; i++) {
+      const p = path[i];
+      if (i > 0) {
+        const prevP = path[i - 1];
+        totalDistance += getDistance(prevP.latitude, prevP.longitude, p.latitude, p.longitude);
+      }
+      if (p.altitude != null) {
+        if (lastEle !== null && p.altitude > lastEle) {
+          elevationGain += (p.altitude - lastEle);
+        }
+        lastEle = p.altitude;
+      }
+    }
+
+    const distanceKm = +(totalDistance / 1000).toFixed(2);
+    const elevationGainInt = Math.round(elevationGain);
+    const estimatedTimeMinutes = Math.round(time / 60);
+
     navigation.navigate("TrailForm", {
       coordinates: path,
       waypointOrders: waypoints.map((wp) =>
@@ -139,7 +176,9 @@ export function RecordTrailScreen() {
           (p) => p.latitude === wp.latitude && p.longitude === wp.longitude
         ) + 1
       ),
-      duration: time,
+      distance: distanceKm > 0 ? distanceKm : undefined,
+      estimatedTime: estimatedTimeMinutes > 0 ? estimatedTimeMinutes : undefined,
+      elevationGain: elevationGainInt > 0 ? elevationGainInt : undefined,
     });
   };
 
