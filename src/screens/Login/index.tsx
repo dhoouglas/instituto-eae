@@ -198,7 +198,7 @@ export function Login({ navigation }: AppStackScreenProps<"login">) {
                   onBlur={() => setFocusedInput(null)}
                   className="mt-4"
                   placeholder="Sua senha"
-                  secureTextEntry
+                  isPassword
                   value={password}
                   onChangeText={setPassword}
                 />
@@ -279,7 +279,7 @@ export function Login({ navigation }: AppStackScreenProps<"login">) {
                   placeholder="Sua nova senha"
                   value={newPassword}
                   onChangeText={setNewPassword}
-                  secureTextEntry
+                  isPassword
                 />
                 <Button
                   title="Salvar Nova Senha"

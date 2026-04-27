@@ -119,7 +119,7 @@ export function Register({ navigation }: AppStackScreenProps<"register">) {
               onBlur={() => setFocusedInput(null)}
               className="mt-4"
               placeholder="Crie uma senha segura"
-              secureTextEntry
+              isPassword
               value={password}
               onChangeText={setPassword}
             />
@@ -129,7 +129,7 @@ export function Register({ navigation }: AppStackScreenProps<"register">) {
               onBlur={() => setFocusedInput(null)}
               className="mt-4"
               placeholder="Confirme sua senha"
-              secureTextEntry
+              isPassword
               value={confirmPassword}
               onChangeText={setConfirmPassword}
             />

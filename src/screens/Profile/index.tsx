@@ -287,7 +287,7 @@ export function Profile({
                 onPress={() =>
                   Alert.alert(
                     "Informações do App",
-                    "Versão: 1.0.0\nDesenvolvido por: DGM33"
+                    "Versão: 1.0.8\nDesenvolvido por: DGM33"
                   )
                 }
               />
