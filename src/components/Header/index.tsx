@@ -9,7 +9,10 @@ type HeaderProps = {
   subtitle?: string;
   showGreeting?: boolean;
   showBackButton?: boolean;
+  hasUnreadNotification?: boolean;
   onAvatarPress?: () => void;
+  onNotificationPress?: () => void;
+  onBackPress?: () => void;
 };
 
 const getInitials = (user: any) => {
@@ -28,7 +31,10 @@ export function Header({
   showGreeting = false,
   subtitle,
   showBackButton = false,
+  hasUnreadNotification = false,
   onAvatarPress,
+  onNotificationPress,
+  onBackPress,
 }: HeaderProps) {
   const { user } = useUser();
   const navigation = useNavigation();
@@ -40,7 +46,7 @@ export function Header({
         <View className="w-10">
           {showBackButton && (
             <TouchableOpacity
-              onPress={() => navigation.goBack()}
+              onPress={onBackPress ? onBackPress : () => navigation.goBack()}
               className="p-1"
             >
               <FontAwesome name="arrow-left" size={24} color="#333" />
@@ -74,21 +80,31 @@ export function Header({
         <Text className="text-lg text-gray-500">Pronto para explorar?</Text>
       </View>
 
-      {/* Lado Direito: Avatar */}
-      <TouchableOpacity onPress={onAvatarPress} activeOpacity={0.8}>
-        {user?.hasImage ? (
-          <Image
-            source={{ uri: user.imageUrl }}
-            className="w-16 h-16 rounded-full"
-          />
-        ) : (
-          <View className="w-16 h-16 rounded-full bg-green-logo items-center justify-center">
-            <Text className="text-white text-2xl font-bold">
-              {getInitials(user)}
-            </Text>
-          </View>
+      {/* Lado Direito: Actions */}
+      <View className="flex-row items-center gap-4">
+        {onNotificationPress && (
+          <TouchableOpacity onPress={onNotificationPress} activeOpacity={0.8} className="p-2 relative">
+            <FontAwesome name="bell-o" size={24} color="#374151" />
+            {hasUnreadNotification && (
+              <View className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border border-gray-50" />
+            )}
+          </TouchableOpacity>
         )}
-      </TouchableOpacity>
+        <TouchableOpacity onPress={onAvatarPress} activeOpacity={0.8}>
+          {user?.hasImage ? (
+            <Image
+              source={{ uri: user.imageUrl }}
+              className="w-16 h-16 rounded-full"
+            />
+          ) : (
+            <View className="w-16 h-16 rounded-full bg-green-logo items-center justify-center">
+              <Text className="text-white text-2xl font-bold">
+                {getInitials(user)}
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
