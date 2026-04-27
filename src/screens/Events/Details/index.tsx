@@ -3,7 +3,6 @@ import {
   View,
   Text,
   SafeAreaView,
-  ScrollView,
   Image,
   TouchableOpacity,
   ActivityIndicator,
@@ -12,6 +11,7 @@ import {
   Dimensions,
   StatusBar as RNStatusBar,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { setStatusBarStyle } from "expo-status-bar";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useAuth } from "@clerk/clerk-expo";
@@ -21,6 +21,7 @@ import Toast from "react-native-toast-message";
 import api from "@/lib/api";
 import { RSVPSelector, RSVPStatus } from "@/components/RSVPSelector";
 import { Button } from "@/components/Button";
+import { CommentSection } from "@/components/Comments/CommentSection";
 
 type EventDetails = {
   id: string;
@@ -135,7 +136,14 @@ export function EventDetailsScreen({ route }: Props) {
     const eventDate = new Date(event.date);
 
     return (
-      <ScrollView showsVerticalScrollIndicator={false} bounces={false} className="bg-white">
+      <KeyboardAwareScrollView
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+        className="bg-white"
+        enableOnAndroid={true}
+        keyboardShouldPersistTaps="handled"
+        extraScrollHeight={80}
+      >
         <View style={{ height: screenHeight * 0.4 }}>
           {event.imageUrl ? (
             <Image
@@ -213,8 +221,10 @@ export function EventDetailsScreen({ route }: Props) {
             </Text>
             <RSVPSelector eventId={event.id} initialStatus={myStatus} />
           </View>
+
+          <CommentSection entityId={event.id} entityType="event" />
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     );
   };
 

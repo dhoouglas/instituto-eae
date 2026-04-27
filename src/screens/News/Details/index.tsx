@@ -3,13 +3,13 @@ import {
   View,
   Text,
   SafeAreaView,
-  ScrollView,
   Image,
   Platform,
   StatusBar as RNStatusBar,
   TouchableOpacity,
   Dimensions,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { setStatusBarStyle } from "expo-status-bar";
 import { useFocusEffect } from "@react-navigation/native";
 import api from "@/lib/api";
@@ -17,6 +17,7 @@ import { NewsStackScreenProps } from "@/routes/types";
 import Toast from "react-native-toast-message";
 import { Button } from "@/components/Button";
 import { FontAwesome } from "@expo/vector-icons";
+import { CommentSection } from "@/components/Comments/CommentSection";
 
 type NewsDetails = {
   title: string;
@@ -99,7 +100,14 @@ export function NewsDetailsScreen({ route, navigation }: Props) {
     }
 
     return (
-      <ScrollView showsVerticalScrollIndicator={false} bounces={false} className="bg-white">
+      <KeyboardAwareScrollView
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+        className="bg-white"
+        enableOnAndroid={true}
+        keyboardShouldPersistTaps="handled"
+        extraScrollHeight={80}
+      >
         <View style={{ height: screenHeight * 0.4 }}>
           {post.imageUrl ? (
             <Image
@@ -143,8 +151,10 @@ export function NewsDetailsScreen({ route, navigation }: Props) {
           <Text className="text-[17px] text-gray-700 leading-relaxed font-[Inter_400Regular]">
             {post.content}
           </Text>
+
+          <CommentSection entityId={newsId} entityType="news" />
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     );
   };
 
