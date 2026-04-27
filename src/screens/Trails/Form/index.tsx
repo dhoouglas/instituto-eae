@@ -12,6 +12,7 @@ import {
   Modal,
   Image,
   Alert,
+  TextInput,
 } from "react-native";
 import { Feather, FontAwesome } from "@expo/vector-icons";
 import { useForm, Controller } from "react-hook-form";
@@ -471,15 +472,16 @@ export function TrailForm() {
                   control={control}
                   name="description"
                   render={({ field: { onChange, onBlur, value } }) => (
-                    <Input
+                    <TextInput
                       placeholder="Descreva os detalhes da aventura..."
+                      placeholderTextColor="#9CA3AF"
                       onBlur={onBlur}
                       onChangeText={onChange}
                       value={value}
                       multiline
-                      numberOfLines={6}
+                      numberOfLines={12}
+                      className="bg-white px-5 py-4 rounded-2xl text-base font-[Inter_400Regular] text-gray-700 h-80 align-top shadow-sm border border-gray-100 leading-relaxed"
                       textAlignVertical="top"
-                      className="h-28 pt-3"
                     />
                   )}
                 />

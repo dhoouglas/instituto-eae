@@ -72,7 +72,7 @@ const EventCard = ({
         resizeMode="cover"
       >
         <View className="absolute top-0 left-0 right-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent bg-black/20" />
-        
+
         {/* Floating Date Badge */}
         <View className="absolute top-4 right-4 bg-white/95 rounded-xl items-center justify-center w-12 h-14 shadow-sm">
           <Text className="text-green-800 text-lg font-[Inter_800ExtraBold] leading-none mt-1">
@@ -100,12 +100,12 @@ const EventCard = ({
           </View>
         )}
       </ImageBackground>
-      
+
       <View className="p-5">
         <Text className="text-xl font-bold text-gray-800 font-[Inter_800ExtraBold] leading-tight mb-3">
           {item.title}
         </Text>
-        
+
         <View className="flex-row items-center mb-2">
           <View className="w-6 items-center">
             <FontAwesome name="map-marker" size={16} color="#047857" />
@@ -117,7 +117,7 @@ const EventCard = ({
             {item.location}
           </Text>
         </View>
-        
+
         <View className="flex-row items-center">
           <View className="w-6 items-center">
             <FontAwesome name="clock-o" size={14} color="#047857" />
@@ -229,7 +229,17 @@ export function EventsListScreen() {
           flex: 1,
         }}
       >
-        <Header title="Próximos Eventos" showBackButton={true} />
+        <Header
+          title="Próximos Eventos"
+          showBackButton={true}
+          onBackPress={() => {
+            if (navigation.canGoBack()) {
+              navigation.goBack();
+            } else {
+              navigation.navigate("home" as any);
+            }
+          }}
+        />
 
         {isLoading && events.length === 0 ? (
           <View style={{ paddingTop: 16 }}>

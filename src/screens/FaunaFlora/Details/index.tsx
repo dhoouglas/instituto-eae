@@ -4,15 +4,16 @@ import {
   Text,
   SafeAreaView,
   Platform,
-  StatusBar,
   ScrollView,
   Image,
   ActivityIndicator,
   Dimensions,
   TouchableOpacity,
+  StatusBar,
 } from "react-native";
-import { useFocusEffect, useRoute, useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useRoute, useNavigation, useIsFocused } from "@react-navigation/native";
 import { RouteProp } from "@react-navigation/native";
+import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import Toast from "react-native-toast-message";
 import PagerView from "react-native-pager-view";
 import { FontAwesome } from "@expo/vector-icons";
@@ -20,6 +21,7 @@ import { FontAwesome } from "@expo/vector-icons";
 import { FaunaFloraStackParamList } from "@/routes/types";
 import api from "@/lib/api";
 import { Button } from "@/components/Button";
+import { Loading } from "@/components/Loading";
 
 type FaunaFloraDetailsRouteProp = RouteProp<
   FaunaFloraStackParamList,
@@ -53,6 +55,8 @@ export function FaunaFloraDetailsScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
+  const isFocused = useIsFocused();
+
   const fetchDetails = useCallback(async () => {
     if (!type || !faunaFloraId) {
       setFetchError("Dados insuficientes para carregar detalhes.");
@@ -82,11 +86,7 @@ export function FaunaFloraDetailsScreen() {
 
   const renderContent = () => {
     if (isLoading) {
-      return (
-        <View className="flex-1 justify-center items-center bg-white">
-          <ActivityIndicator size="large" color="#166534" />
-        </View>
-      );
+      return <Loading fullScreen />;
     }
 
     if (fetchError || !item) {
@@ -216,7 +216,13 @@ export function FaunaFloraDetailsScreen() {
 
   return (
     <View className="flex-1 bg-white">
-      <StatusBar barStyle={isLoading || !item?.imageUrls?.length ? "dark-content" : "light-content"} />
+      {/* StatusBar scoped to this screen via isFocused — auto-restores when navigating back */}
+      {isFocused && (
+        <ExpoStatusBar
+          style={isLoading || !item?.imageUrls?.length ? "dark" : "light"}
+          translucent
+        />
+      )}
 
       {renderContent()}
 

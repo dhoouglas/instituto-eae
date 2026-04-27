@@ -26,6 +26,7 @@ import api from "@/lib/api";
 import { Header } from "@/components/Header";
 import { CategorySelector } from "@/components/CategorySelector";
 import { useStorage } from "@/hooks/useStorage";
+import { Loading } from "@/components/Loading";
 
 import * as ImagePicker from "expo-image-picker";
 import { FontAwesome } from "@expo/vector-icons";
@@ -189,11 +190,7 @@ export function NewsFormScreen({ route, navigation }: Props) {
   };
 
   if (isFetchingData) {
-    return (
-      <SafeAreaView className="flex-1 bg-gray-50 justify-center items-center">
-        <ActivityIndicator size="large" color="#166534" />
-      </SafeAreaView>
-    );
+    return <Loading fullScreen />;
   }
 
   return (
@@ -295,8 +292,8 @@ export function NewsFormScreen({ route, navigation }: Props) {
                 value={formData.content}
                 onChangeText={(val) => handleInputChange("content", val)}
                 multiline
-                numberOfLines={10}
-                className="bg-white px-5 py-4 rounded-2xl text-base font-[Inter_400Regular] text-gray-700 h-64 align-top shadow-sm border border-gray-100 leading-relaxed"
+                numberOfLines={12}
+                className="bg-white px-5 py-4 rounded-2xl text-base font-[Inter_400Regular] text-gray-700 h-80 align-top shadow-sm border border-gray-100 leading-relaxed"
                 textAlignVertical="top"
               />
             </View>

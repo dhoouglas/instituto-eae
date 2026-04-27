@@ -78,7 +78,7 @@ const HeroNewsCard = ({
       resizeMode="cover"
     >
       <View className="absolute top-0 left-0 right-0 bottom-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent bg-black/40" />
-      
+
       <View className="absolute top-4 left-4 bg-green-600 px-3 py-1 rounded-full">
         <Text className="text-white text-[10px] font-[Inter_800ExtraBold] uppercase tracking-wider">
           Destaque
@@ -164,12 +164,12 @@ const HorizontalNewsCard = ({
           {item.title}
         </Text>
       </View>
-      
+
       <View className="flex-row items-center justify-between mt-2">
         <Text className="text-[11px] text-gray-500 font-[Inter_500Medium]">
           {new Date(item.createdAt || new Date()).toLocaleDateString("pt-BR")}
         </Text>
-        
+
         {isAdmin && (
           <View className="flex-row gap-2">
             <TouchableOpacity onPress={onEdit} className="p-1">
@@ -333,7 +333,17 @@ export function NewsListScreen() {
           flex: 1,
         }}
       >
-        <Header title="Notícias" showBackButton={true} />
+        <Header
+          title="Notícias"
+          showBackButton={true}
+          onBackPress={() => {
+            if (navigation.canGoBack()) {
+              navigation.goBack();
+            } else {
+              navigation.navigate("home" as any);
+            }
+          }}
+        />
 
         {renderContent()}
 

@@ -21,6 +21,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import api from "@/lib/api";
 import { FontAwesome } from "@expo/vector-icons";
 import { Header } from "@/components/Header";
+import { Loading } from "@/components/Loading";
 import Toast from "react-native-toast-message";
 
 type Event = {
@@ -207,18 +208,26 @@ export function Home({ navigation }: AppTabScreenProps<"home">) {
   const { getToken } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
   const [news, setNews] = useState<NewsPost[]>([]);
+  const [hasUnreadNotification, setHasUnreadNotification] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchHomeData = useCallback(async () => {
     setIsLoading(true);
     try {
       const token = await getToken();
-      const [eventsResponse, newsResponse] = await Promise.all([
+      const inboxToken = await getToken({ template: "api-testing-token" });
+      const [eventsResponse, newsResponse, inboxResponse] = await Promise.all([
         api.get("/events?limit=4", {
           headers: { Authorization: `Bearer ${token}` },
         }),
         api.get("/news?limit=3"),
+        api.get("/notifications/inbox", {
+          headers: { Authorization: `Bearer ${inboxToken}` },
+        }),
       ]);
+
+      const unreadCount = inboxResponse.data.filter((n: any) => !n.read).length;
+      setHasUnreadNotification(unreadCount > 0);
 
       const formattedEvents = eventsResponse.data.events.map((event: any) => ({
         ...event,
@@ -241,11 +250,7 @@ export function Home({ navigation }: AppTabScreenProps<"home">) {
   );
 
   if (isLoading) {
-    return (
-      <SafeAreaView className="flex-1 justify-center items-center bg-gray-50">
-        <ActivityIndicator size="large" color="#166534" />
-      </SafeAreaView>
-    );
+    return <Loading fullScreen />;
   }
 
   return (
@@ -259,6 +264,10 @@ export function Home({ navigation }: AppTabScreenProps<"home">) {
       >
         <Header
           showGreeting={true}
+          hasUnreadNotification={hasUnreadNotification}
+          onNotificationPress={() =>
+            navigation.navigate("profile", { screen: "notificationsInbox" })
+          }
           onAvatarPress={() =>
             navigation.navigate("profile", { screen: "profileMain" })
           }

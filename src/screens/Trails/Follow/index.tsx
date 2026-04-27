@@ -16,6 +16,7 @@ import { AppNavigatorRoutesProps, TrailStackParamList } from "@/routes/types";
 import { FollowTrailMap } from "@/components/FollowTrailMap";
 import { useLocation } from "@/hooks/useLocation";
 import api from "@/lib/api";
+import { Loading } from "@/components/Loading";
 import { FontAwesome } from "@expo/vector-icons";
 
 interface ApiWaypoint {
@@ -143,11 +144,7 @@ export function FollowTrailScreen() {
   };
 
   if (loading) {
-    return (
-      <View className="flex-1 justify-center items-center bg-[#F9FAFB]">
-        <ActivityIndicator size="large" color="#166534" />
-      </View>
-    );
+    return <Loading fullScreen />;
   }
 
   if (errorMsg) {

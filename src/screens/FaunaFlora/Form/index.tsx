@@ -7,6 +7,7 @@ import {
   StatusBar,
   ScrollView,
   KeyboardAvoidingView,
+  TextInput,
 } from "react-native";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -255,11 +256,11 @@ export function FaunaFloraFormScreen() {
         const endpoint = payload.type === "FAUNA" ? "/fauna" : "/flora";
         const apiCall = isEditing
           ? api.put(`${endpoint}/${faunaFloraId}`, finalPayload, {
-              headers: { Authorization: `Bearer ${token}` },
-            })
+            headers: { Authorization: `Bearer ${token}` },
+          })
           : api.post(endpoint, finalPayload, {
-              headers: { Authorization: `Bearer ${token}` },
-            });
+            headers: { Authorization: `Bearer ${token}` },
+          });
 
         await apiCall;
       }
@@ -380,22 +381,23 @@ export function FaunaFloraFormScreen() {
             </View>
 
             <View className="mb-6">
-              <Text className="text-base font-[Inter_700Bold] text-gray-700 mb-2">
+              <Text className="text-sm font-[Inter_700Bold] text-gray-700 mb-2 ml-1 uppercase tracking-wider">
                 Descrição
               </Text>
               <Controller
                 control={control}
                 name="description"
                 render={({ field: { onChange, onBlur, value } }) => (
-                  <Input
+                  <TextInput
                     placeholder="Fale sobre as características, hábitos, etc..."
+                    placeholderTextColor="#9CA3AF"
                     onBlur={onBlur}
                     onChangeText={onChange}
                     value={value}
                     multiline
-                    numberOfLines={5}
+                    numberOfLines={12}
+                    className="bg-white px-5 py-4 rounded-2xl text-base font-[Inter_400Regular] text-gray-700 h-80 align-top shadow-sm border border-gray-100 leading-relaxed"
                     textAlignVertical="top"
-                    className="h-32"
                   />
                 )}
               />

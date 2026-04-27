@@ -21,6 +21,7 @@ import { useAuth } from "@clerk/clerk-expo";
 import { formatTime } from "@/utils/formatters";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
+import { Loading } from "@/components/Loading";
 
 const { width } = Dimensions.get("window");
 
@@ -120,19 +121,15 @@ export function TrailDetails() {
   const initialRegion =
     trail?.coordinates && trail.coordinates.length > 0
       ? {
-          latitude: trail.coordinates[0].latitude,
-          longitude: trail.coordinates[0].longitude,
-          latitudeDelta: 0.02,
-          longitudeDelta: 0.02,
-        }
+        latitude: trail.coordinates[0].latitude,
+        longitude: trail.coordinates[0].longitude,
+        latitudeDelta: 0.02,
+        longitudeDelta: 0.02,
+      }
       : null;
 
   if (loading) {
-    return (
-      <View className="flex-1 justify-center items-center bg-[#F9FAFB]">
-        <ActivityIndicator size="large" color="#166534" />
-      </View>
-    );
+    return <Loading fullScreen />;
   }
 
   if (error || !trail) {
@@ -188,7 +185,7 @@ export function TrailDetails() {
             pointerEvents="none"
           />
 
-          <View 
+          <View
             className="absolute w-full flex-row justify-between px-4"
             style={{ top: Platform.OS === 'android' ? (StatusBar.currentHeight || 24) + 16 : 48 }}
           >
@@ -242,8 +239,8 @@ export function TrailDetails() {
                 trail.difficulty === "FACIL"
                   ? "#16a34a"
                   : trail.difficulty === "MEDIO"
-                  ? "#d97706"
-                  : "#dc2626"
+                    ? "#d97706"
+                    : "#dc2626"
               }
             />
             <InfoCard

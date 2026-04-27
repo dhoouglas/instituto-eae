@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -57,14 +57,12 @@ const FilterSwitch = ({ filter, setFilter }: FilterSwitchProps) => (
     <TouchableOpacity
       onPress={() => setFilter("ALL")}
       activeOpacity={0.7}
-      className={`flex-1 items-center py-2.5 rounded-full ${
-        filter === "ALL" ? "bg-green-700" : "border border-transparent"
-      }`}
+      className={`flex-1 items-center py-2.5 rounded-full ${filter === "ALL" ? "bg-green-700" : "border border-transparent"
+        }`}
     >
       <Text
-        className={`text-[13px] font-[Inter_700Bold] uppercase tracking-wider ${
-          filter === "ALL" ? "text-white" : "text-gray-500"
-        }`}
+        className={`text-[13px] font-[Inter_700Bold] uppercase tracking-wider ${filter === "ALL" ? "text-white" : "text-gray-500"
+          }`}
       >
         Todos
       </Text>
@@ -72,14 +70,12 @@ const FilterSwitch = ({ filter, setFilter }: FilterSwitchProps) => (
     <TouchableOpacity
       onPress={() => setFilter("FAUNA")}
       activeOpacity={0.7}
-      className={`flex-1 items-center py-2.5 rounded-full ${
-        filter === "FAUNA" ? "bg-green-700" : "border border-transparent"
-      }`}
+      className={`flex-1 items-center py-2.5 rounded-full ${filter === "FAUNA" ? "bg-green-700" : "border border-transparent"
+        }`}
     >
       <Text
-        className={`text-[13px] font-[Inter_700Bold] uppercase tracking-wider ${
-          filter === "FAUNA" ? "text-white" : "text-gray-500"
-        }`}
+        className={`text-[13px] font-[Inter_700Bold] uppercase tracking-wider ${filter === "FAUNA" ? "text-white" : "text-gray-500"
+          }`}
       >
         Fauna
       </Text>
@@ -87,14 +83,12 @@ const FilterSwitch = ({ filter, setFilter }: FilterSwitchProps) => (
     <TouchableOpacity
       onPress={() => setFilter("FLORA")}
       activeOpacity={0.7}
-      className={`flex-1 items-center py-2.5 rounded-full ${
-        filter === "FLORA" ? "bg-green-700" : "border border-transparent"
-      }`}
+      className={`flex-1 items-center py-2.5 rounded-full ${filter === "FLORA" ? "bg-green-700" : "border border-transparent"
+        }`}
     >
       <Text
-        className={`text-[13px] font-[Inter_700Bold] uppercase tracking-wider ${
-          filter === "FLORA" ? "text-white" : "text-gray-500"
-        }`}
+        className={`text-[13px] font-[Inter_700Bold] uppercase tracking-wider ${filter === "FLORA" ? "text-white" : "text-gray-500"
+          }`}
       >
         Flora
       </Text>
@@ -181,7 +175,14 @@ export function FaunaFloraListScreen() {
   const [items, setItems] = useState<FaunaFloraPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<FilterType>(route.params?.type || "ALL");
+  const [filter, setFilter] = useState<FilterType>(
+    (route.params?.type === "FAUNA" || route.params?.type === "FLORA") ? route.params.type : "ALL"
+  );
+
+  useEffect(() => {
+    const t = route.params?.type;
+    setFilter((t === "FAUNA" || t === "FLORA") ? t : "ALL");
+  }, [route.params?.type]);
 
   const fetchItems = useCallback(async () => {
     setIsLoading(true);

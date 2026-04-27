@@ -31,6 +31,7 @@ import api from "@/lib/api";
 import { EventsStackScreenProps } from "@/routes/types";
 import { Header } from "@/components/Header";
 import { useStorage } from "@/hooks/useStorage";
+import { Loading } from "@/components/Loading";
 
 const InputWithLabel = ({
   label,
@@ -238,11 +239,7 @@ export function EventFormScreen({ route, navigation }: Props) {
   }, [eventId, isEditMode, navigation]);
 
   if (isFetchingData) {
-    return (
-      <SafeAreaView className="flex-1 justify-center items-center bg-gray-50">
-        <ActivityIndicator size="large" color="#166534" />
-      </SafeAreaView>
-    );
+    return <Loading fullScreen />;
   }
 
   return (
@@ -313,7 +310,7 @@ export function EventFormScreen({ route, navigation }: Props) {
               value={formData.title}
               onChangeText={(val) => handleInputChange("title", val)}
             />
-            
+
             <InputWithLabel
               label="Localização"
               icon="map-marker"
@@ -362,8 +359,8 @@ export function EventFormScreen({ route, navigation }: Props) {
                 value={formData.description}
                 onChangeText={(text) => handleInputChange("description", text)}
                 multiline
-                numberOfLines={6}
-                className="bg-white px-5 py-4 rounded-2xl text-base font-[Inter_400Regular] text-gray-700 h-40 align-top shadow-sm border border-gray-100 leading-relaxed"
+                numberOfLines={12}
+                className="bg-white px-5 py-4 rounded-2xl text-base font-[Inter_400Regular] text-gray-700 h-80 align-top shadow-sm border border-gray-100 leading-relaxed"
                 textAlignVertical="top"
               />
             </View>
