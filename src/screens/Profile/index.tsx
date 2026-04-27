@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { useAuth, useUser } from "@clerk/clerk-expo";
 import { FontAwesome, Feather } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
 import { ProfileStackScreenProps, RootParamList } from "@/routes/types";
@@ -25,33 +26,33 @@ const ProfileMenuItem = ({
   onPress,
   isLogout = false,
 }: {
-  icon: any;
+  icon: React.ReactNode;
   text: string;
   onPress?: () => void;
   isLogout?: boolean;
 }) => (
   <TouchableOpacity
     onPress={onPress}
-    className={`flex-row items-center px-5 py-4 rounded-xl mb-3 ${
-      isLogout ? "bg-red-50" : "bg-gray-50"
-    }`}
+    className={`flex-row items-center px-4 py-3.5 mb-1 rounded-[20px] ${isLogout ? "bg-red-50/40" : "bg-white"
+      }`}
     activeOpacity={0.7}
   >
-    {icon}
+    <View
+      className={`w-11 h-11 items-center justify-center rounded-[18px] ${isLogout ? "bg-red-100" : "bg-green-50"
+        }`}
+    >
+      {icon}
+    </View>
     <Text
-      className={`text-[17px] ml-4 font-[Inter_600SemiBold] ${
-        isLogout ? "text-red-600" : "text-gray-700"
-      }`}
+      className={`text-[16px] ml-4 font-[Inter_600SemiBold] ${isLogout ? "text-red-600" : "text-gray-800"
+        }`}
     >
       {text}
     </Text>
     {!isLogout && (
-      <FontAwesome
-        name="chevron-right"
-        size={14}
-        color="#A1A1AA"
-        className="ml-auto"
-      />
+      <View className="ml-auto w-8 h-8 rounded-full bg-gray-50 items-center justify-center">
+        <FontAwesome name="chevron-right" size={12} color="#94A3B8" />
+      </View>
     )}
   </TouchableOpacity>
 );
@@ -166,27 +167,34 @@ export function Profile({
   };
 
   if (!isLoaded) {
-    return <Loading />;
+    return <Loading fullScreen />;
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-100">
-      <ScrollView>
+    <SafeAreaView className="flex-1 bg-gray-50">
+      <ScrollView showsVerticalScrollIndicator={false}>
         {/* Profile Header */}
-        <View className="bg-green-700 pt-20 pb-8 px-6 items-center rounded-b-3xl">
+        <LinearGradient
+          colors={["#166534", "#15803d"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          className="pt-20 pb-12 px-6 items-center rounded-b-[40px]"
+          style={{ shadowColor: "#15803d", shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.3, shadowRadius: 15, elevation: 10 }}
+        >
           <TouchableOpacity
             onPress={handleSelectAvatar}
             disabled={isUploading}
-            className="mb-4 border-4 border-white rounded-full bg-white"
+            className="mb-5 border-4 border-white rounded-full bg-white"
+            style={{ shadowColor: "#000", shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 12, elevation: 8 }}
           >
             {user?.hasImage ? (
               <Image
                 source={{ uri: user.imageUrl }}
-                className="w-28 h-28 rounded-full"
+                className="w-32 h-32 rounded-full"
               />
             ) : (
-              <View className="w-28 h-28 rounded-full bg-green-100 items-center justify-center">
-                <Text className="text-green-800 text-4xl font-bold">
+              <View className="w-32 h-32 rounded-full bg-green-100 items-center justify-center">
+                <Text className="text-green-800 text-5xl font-[Inter_800ExtraBold]">
                   {getInitials()}
                 </Text>
               </View>
@@ -201,34 +209,39 @@ export function Profile({
             {user?.fullName}
           </Text>
           {user?.username && (
-            <Text className="text-xl font-[Inter_500Medium] text-green-100 mt-1">
+            <Text className="text-lg font-[Inter_500Medium] text-green-100 mt-1 opacity-90">
               @{user?.username}
             </Text>
           )}
-          <Text className="text-base text-green-100 mt-1 font-[Inter_500Medium]">
-            {user?.primaryEmailAddress?.emailAddress}
-          </Text>
-        </View>
+          <View className="bg-green-800/40 px-4 py-2 rounded-full mt-3">
+            <Text className="text-sm text-green-50 font-[Inter_500Medium]">
+              {user?.primaryEmailAddress?.emailAddress}
+            </Text>
+          </View>
+        </LinearGradient>
 
-        <View className="p-6">
+        <View className="px-5 pt-8 pb-10">
           {/* Account Settings Section */}
           <View className="mb-8">
-            <Text className="text-sm font-bold text-gray-500 uppercase mb-3 px-2 tracking-wider">
+            <Text className="text-xs font-[Inter_800ExtraBold] text-gray-400 uppercase mb-3 px-2 tracking-[1.5px]">
               Configurações da Conta
             </Text>
-            <View className="bg-white rounded-2xl p-2 border border-gray-100">
+            <View
+              className="bg-white rounded-[28px] p-2"
+              style={{ shadowColor: "#94a3b8", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 12, elevation: 3 }}
+            >
               <ProfileMenuItem
-                icon={<Feather name="user" size={20} color="#555" />}
+                icon={<Feather name="user" size={18} color="#15803d" />}
                 text="Editar Perfil"
                 onPress={() => navigation.navigate("editProfile")}
               />
               <ProfileMenuItem
-                icon={<Feather name="shield" size={20} color="#555" />}
+                icon={<Feather name="shield" size={18} color="#15803d" />}
                 text="Segurança e Senha"
                 onPress={() => navigation.navigate("security")}
               />
               <ProfileMenuItem
-                icon={<Feather name="bell" size={20} color="#555" />}
+                icon={<Feather name="bell" size={18} color="#15803d" />}
                 text="Notificações"
                 onPress={() => navigation.navigate("notifications")}
               />
@@ -238,17 +251,20 @@ export function Profile({
           {/* Developer Tools Section */}
           {isAdmin && (
             <View className="mb-8">
-              <Text className="text-sm font-bold text-gray-500 uppercase mb-3 px-2 tracking-wider">
+              <Text className="text-xs font-[Inter_800ExtraBold] text-gray-400 uppercase mb-3 px-2 tracking-[1.5px]">
                 Ferramentas de Desenvolvedor
               </Text>
-              <View className="bg-white rounded-2xl p-2 border border-gray-100">
+              <View
+                className="bg-white rounded-[28px] p-2"
+                style={{ shadowColor: "#94a3b8", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 12, elevation: 3 }}
+              >
                 <ProfileMenuItem
-                  icon={<FontAwesome name="dashboard" size={20} color="#555" />}
+                  icon={<FontAwesome name="dashboard" size={18} color="#15803d" />}
                   text="Painel do Administrador"
                   onPress={() => navigation.navigate("admin")}
                 />
                 <ProfileMenuItem
-                  icon={<Feather name="copy" size={20} color="#555" />}
+                  icon={<Feather name="copy" size={18} color="#15803d" />}
                   text="Copiar Token de Teste"
                   onPress={handleCopyToken}
                 />
@@ -256,26 +272,17 @@ export function Profile({
             </View>
           )}
 
-          {/* Logout Section */}
-          <View className="mt-2">
-            <View className="bg-white rounded-2xl p-2 border border-gray-100">
-              <ProfileMenuItem
-                icon={<Feather name="log-out" size={20} color="#EF4444" />}
-                text="Sair (Logout)"
-                onPress={handleSignOut}
-                isLogout
-              />
-            </View>
-          </View>
-
-          {/* About Section */}
-          <View className="mt-8">
-            <Text className="text-sm font-bold text-gray-500 uppercase mb-3 px-2 tracking-wider">
-              Sobre
+          {/* About & Logout Section */}
+          <View className="mb-4">
+            <Text className="text-xs font-[Inter_800ExtraBold] text-gray-400 uppercase mb-3 px-2 tracking-[1.5px]">
+              Mais
             </Text>
-            <View className="bg-white rounded-2xl p-2 border border-gray-100">
+            <View
+              className="bg-white rounded-[28px] p-2"
+              style={{ shadowColor: "#94a3b8", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 12, elevation: 3 }}
+            >
               <ProfileMenuItem
-                icon={<Feather name="info" size={20} color="#555" />}
+                icon={<Feather name="info" size={18} color="#15803d" />}
                 text="Versão e Créditos"
                 onPress={() =>
                   Alert.alert(
@@ -283,6 +290,12 @@ export function Profile({
                     "Versão: 1.0.0\nDesenvolvido por: DGM33"
                   )
                 }
+              />
+              <ProfileMenuItem
+                icon={<Feather name="log-out" size={18} color="#EF4444" />}
+                text="Sair da Conta"
+                onPress={handleSignOut}
+                isLogout
               />
             </View>
           </View>
