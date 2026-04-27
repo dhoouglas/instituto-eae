@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "315657853198",
+    "project_id": "instituto-eae",
+    "storage_bucket": "instituto-eae.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:315657853198:android:103e8db8979b7fb1379f5f",
+        "android_client_info": {
+          "package_name": "com.dhoouglas.appeae"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC0ZwW00lJ5ltKeK6mBnlCZvp8j2EzZLdM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

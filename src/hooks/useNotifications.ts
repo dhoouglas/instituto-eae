@@ -3,10 +3,12 @@ import { Platform } from "react-native";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";
+import { useAuth } from "@clerk/clerk-expo";
 import api from "@/lib/api";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
+    shouldShowAlert: true,
     shouldShowBanner: true,
     shouldShowList: true,
     shouldPlaySound: true,
@@ -16,11 +18,6 @@ Notifications.setNotificationHandler({
 
 async function registerForPushNotificationsAsync() {
   let token;
-
-  if (Constants.appOwnership === "expo") {
-    console.log("Running in Expo Go, skipping push notification registration.");
-    return;
-  }
 
   if (Platform.OS === "android") {
     await Notifications.setNotificationChannelAsync("default", {
@@ -43,7 +40,8 @@ async function registerForPushNotificationsAsync() {
     return;
   }
   try {
-    token = (await Notifications.getExpoPushTokenAsync()).data;
+    const projectId = Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId;
+    token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
     console.log(
       "================================================================="
     );
@@ -63,6 +61,7 @@ async function registerForPushNotificationsAsync() {
 }
 
 export function useNotifications() {
+  const { getToken } = useAuth();
   const [expoPushToken, setExpoPushToken] = useState("");
   const [notification, setNotification] = useState<
     Notifications.Notification | false
@@ -71,12 +70,21 @@ export function useNotifications() {
   const responseListener = useRef<Notifications.Subscription | null>(null);
 
   useEffect(() => {
-    registerForPushNotificationsAsync().then((token) => {
+    registerForPushNotificationsAsync().then(async (token) => {
       if (token) {
         setExpoPushToken(token);
-        api.post("/users/push-token", { token }).catch((error: any) => {
-          console.error("Error sending push token to server:", error);
-        });
+        try {
+          const authToken = await getToken({ template: "api-testing-token" });
+          if (authToken) {
+            await api.post(
+              "/notifications/users/push-token",
+              { pushToken: token },
+              { headers: { Authorization: `Bearer ${authToken}` } }
+            );
+          }
+        } catch (error: any) {
+          console.error("Error sending push token to server:", error.response?.data || error.message);
+        }
       }
     });
 

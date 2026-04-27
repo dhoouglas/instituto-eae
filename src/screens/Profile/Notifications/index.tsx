@@ -7,12 +7,14 @@ import {
   Switch,
   Platform,
   StatusBar,
+  ActivityIndicator,
 } from "react-native";
 import { useAuth } from "@clerk/clerk-expo";
 import { ProfileStackScreenProps } from "@/routes/types";
 import { Header } from "@/components/Header";
 import api from "@/lib/api";
 import Toast from "react-native-toast-message";
+import { Loading } from "@/components/Loading";
 
 const NotificationToggle = ({
   label,
@@ -35,15 +37,17 @@ const NotificationToggle = ({
   </View>
 );
 
+type Preferences = {
+  newEvents: boolean;
+  eventReminders: boolean;
+  appUpdates: boolean;
+};
+
 export function Notifications({
   navigation,
 }: ProfileStackScreenProps<"notifications">) {
   const { getToken } = useAuth();
-  const [preferences, setPreferences] = useState({
-    newEvents: true,
-    eventReminders: true,
-    appUpdates: false,
-  });
+  const [preferences, setPreferences] = useState<Preferences | null>(null);
 
   useEffect(() => {
     const fetchPreferences = async () => {
@@ -79,10 +83,11 @@ export function Notifications({
   }, []);
 
   const handleToggle = async (
-    key: keyof typeof preferences,
+    key: keyof Preferences,
     value: boolean
   ) => {
-    const newPreferences = { ...preferences, [key]: value };
+    if (!preferences) return;
+    const newPreferences: Preferences = { ...preferences, [key]: value };
     setPreferences(newPreferences);
 
     const keyMapping: { [key: string]: string } = {
@@ -134,23 +139,29 @@ export function Notifications({
         >
           <Header title="Notificações" showBackButton />
 
-          <View className="bg-white rounded-2xl border border-gray-100 overflow-hidden mt-4">
-            <NotificationToggle
-              label="Novos eventos na minha área"
-              value={preferences.newEvents}
-              onValueChange={(value) => handleToggle("newEvents", value)}
-            />
-            <NotificationToggle
-              label="Lembretes de eventos que confirmei presença"
-              value={preferences.eventReminders}
-              onValueChange={(value) => handleToggle("eventReminders", value)}
-            />
-            <NotificationToggle
-              label="Novidades e atualizações do Instituto EAE"
-              value={preferences.appUpdates}
-              onValueChange={(value) => handleToggle("appUpdates", value)}
-            />
-          </View>
+          {preferences === null ? (
+            <View className="items-center justify-center mt-20">
+              <Loading />
+            </View>
+          ) : (
+            <View className="bg-white rounded-2xl border border-gray-100 overflow-hidden mt-4">
+              <NotificationToggle
+                label="Novos eventos na minha área"
+                value={preferences.newEvents}
+                onValueChange={(value) => handleToggle("newEvents", value)}
+              />
+              <NotificationToggle
+                label="Lembretes de eventos que confirmei presença"
+                value={preferences.eventReminders}
+                onValueChange={(value) => handleToggle("eventReminders", value)}
+              />
+              <NotificationToggle
+                label="Novidades e atualizações do Instituto EAE"
+                value={preferences.appUpdates}
+                onValueChange={(value) => handleToggle("appUpdates", value)}
+              />
+            </View>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
