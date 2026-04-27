@@ -498,6 +498,18 @@ export function AdminDashboard() {
                 }
               />
 
+              <ActionButton
+                icon="alert-triangle"
+                label="Comentários Denunciados"
+                subtitle="Faça a moderação de comentários reportados"
+                colors={["#EF4444", "#B91C1C"]}
+                onPress={() =>
+                  navigation.navigate("profile", {
+                    screen: "adminReportedComments",
+                  })
+                }
+              />
+
               {/* ── Resumo dos Eventos ─────────────────────────────── */}
               {events.length > 0 && (
                 <>

@@ -51,6 +51,7 @@ export type ProfileStackParamList = {
   notificationsInbox: undefined;
   admin: undefined;
   adminSendNotification: undefined;
+  adminReportedComments: undefined;
 };
 
 export type AdminStackParamList = {
