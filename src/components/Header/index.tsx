@@ -75,7 +75,7 @@ export function Header({
       {/* Lado Esquerdo: Textos de Saudação */}
       <View>
         <Text className="text-3xl font-bold text-gray-800 font-[Inter_700Bold]">
-          Olá, {user?.firstName ?? "Voluntário(a) EAE"}!
+          Olá, {user?.firstName ?? "Voluntários EAE"}!
         </Text>
         <Text className="text-lg text-gray-500">Pronto para explorar?</Text>
       </View>

@@ -8,6 +8,7 @@ import { Notifications } from "@/screens/Profile/Notifications";
 import { NotificationsInbox } from "@/screens/Profile/NotificationsInbox";
 import { AdminDashboard } from "@/screens/Admin/Dashboard";
 import { AdminSendNotification } from "@/screens/Admin/SendNotification";
+import { AdminReportedComments } from "@/screens/Admin/AdminReportedComments";
 
 import { ProfileStackParamList } from "./types";
 
@@ -23,6 +24,7 @@ export function ProfileRoutes() {
       <Screen name="notificationsInbox" component={NotificationsInbox} />
       <Screen name="admin" component={AdminDashboard} />
       <Screen name="adminSendNotification" component={AdminSendNotification} />
+      <Screen name="adminReportedComments" component={AdminReportedComments} />
     </Navigator>
   );
 }
