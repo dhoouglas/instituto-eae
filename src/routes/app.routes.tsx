@@ -12,6 +12,7 @@ import { FaunaFloraRoutes } from "./faunaflora.routes";
 import { useUser } from "@clerk/clerk-expo";
 import { NewsStackNavigator } from "./news.routes";
 import { TrailRoutes } from "./trails.routes";
+import { useNotifications } from "@/hooks/useNotifications";
 
 const Tab = createBottomTabNavigator<RootParamList>();
 
@@ -19,16 +20,17 @@ export function AppRoutes() {
   const { user } = useUser();
   const isAdmin = user?.publicMetadata?.role === "admin";
   const insets = useSafeAreaInsets();
+  useNotifications();
 
   return (
     <Tab.Navigator
       screenOptions={{
-        tabBarActiveTintColor: "#488A35",
+        tabBarActiveTintColor: "#15803d",
         tabBarInactiveTintColor: "#54341c",
         tabBarStyle: {
-          height: 70,
+          height: 60 + insets.bottom,
           paddingTop: 5,
-          paddingBottom: insets.bottom + 5,
+          paddingBottom: insets.bottom > 0 ? insets.bottom : 8,
           borderTopWidth: 0,
           backgroundColor: "#FFFFFF",
           elevation: 10,
@@ -87,6 +89,15 @@ export function AppRoutes() {
             <MaterialIcons name="eco" color={color} size={24} />
           ),
         }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            navigation.navigate("faunaFlora", {
+              screen: "faunaFloraList",
+              params: { type: "ALL" },
+            });
+          },
+        })}
       />
 
       <Tab.Screen

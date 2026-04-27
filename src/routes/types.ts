@@ -20,7 +20,7 @@ export type EventsStackParamList = {
 };
 
 export type FaunaFloraStackParamList = {
-  faunaFloraList: { type?: "FAUNA" | "FLORA" } | undefined;
+  faunaFloraList: { type?: "FAUNA" | "FLORA" | "ALL" } | undefined;
   createFaunaFlora: undefined;
   faunaFloraDetails: { faunaFloraId: string; type: "FAUNA" | "FLORA" };
   editFaunaFlora: { faunaFloraId: string; type: "FAUNA" | "FLORA" };
@@ -48,7 +48,9 @@ export type ProfileStackParamList = {
   editProfile: undefined;
   security: undefined;
   notifications: undefined;
+  notificationsInbox: undefined;
   admin: undefined;
+  adminSendNotification: undefined;
 };
 
 export type AdminStackParamList = {

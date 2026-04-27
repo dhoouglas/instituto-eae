@@ -1,4 +1,3 @@
-import { useNotifications } from "@/hooks/useNotifications";
 import { Loading } from "@/components/Loading";
 import "./src/theme/global.css";
 import {
@@ -14,7 +13,6 @@ import { tokenCache } from "@/utils/tokenCache";
 
 export default function App() {
   const [isFontsLoaded] = useFonts({ Inter_400Regular, Inter_700Bold });
-  // useNotifications();
 
   const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 

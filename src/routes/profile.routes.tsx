@@ -5,7 +5,9 @@ import { Profile } from "@/screens/Profile";
 import { EditProfile } from "@/screens/Profile/EditProfile";
 import { Security } from "@/screens/Profile/Security";
 import { Notifications } from "@/screens/Profile/Notifications";
+import { NotificationsInbox } from "@/screens/Profile/NotificationsInbox";
 import { AdminDashboard } from "@/screens/Admin/Dashboard";
+import { AdminSendNotification } from "@/screens/Admin/SendNotification";
 
 import { ProfileStackParamList } from "./types";
 
@@ -18,7 +20,9 @@ export function ProfileRoutes() {
       <Screen name="editProfile" component={EditProfile} />
       <Screen name="security" component={Security} />
       <Screen name="notifications" component={Notifications} />
+      <Screen name="notificationsInbox" component={NotificationsInbox} />
       <Screen name="admin" component={AdminDashboard} />
+      <Screen name="adminSendNotification" component={AdminSendNotification} />
     </Navigator>
   );
 }

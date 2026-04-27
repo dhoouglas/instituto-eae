@@ -4,7 +4,7 @@ module.exports = {
     slug: "Instituto-EAE",
     scheme: "instituto-eae",
     owner: "dhoouglas",
-    version: "1.0.6",
+    version: "1.0.7",
     orientation: "portrait",
     icon: "./assets/splash-icon-light.png",
     userInterfaceStyle: "automatic",
@@ -19,7 +19,7 @@ module.exports = {
       },
     },
     ios: {
-      buildNumber: "1.0.6",
+      buildNumber: "1.0.7",
       supportsTablet: true,
       icon: {
         dark: "./assets/ios-dark.png",
@@ -46,6 +46,7 @@ module.exports = {
       },
       edgeToEdgeEnabled: true,
       package: "com.dhoouglas.appeae",
+      googleServicesFile: "./google-services.json",
       permissions: [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
