@@ -6,6 +6,41 @@ import Constants from "expo-constants";
 import { useAuth } from "@clerk/clerk-expo";
 import api from "@/lib/api";
 
+const MAX_RETRIES = 5;
+const RETRY_BASE_DELAY_MS = 1000;
+
+async function sendPushTokenWithRetry(
+  token: string,
+  getToken: (opts: any) => Promise<string | null>
+) {
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      const authToken = await getToken({ template: "api-testing-token" });
+      if (!authToken) return;
+
+      await api.post(
+        "/notifications/users/push-token",
+        { pushToken: token },
+        { headers: { Authorization: `Bearer ${authToken}` } }
+      );
+      console.log(`✅ Push token registrado com sucesso (tentativa ${attempt + 1})`);
+      return;
+    } catch (error: any) {
+      const status = error.response?.status;
+      const isUserNotFound = status === 404 || status === 400;
+
+      if (isUserNotFound && attempt < MAX_RETRIES - 1) {
+        const delay = RETRY_BASE_DELAY_MS * Math.pow(2, attempt);
+        console.warn(`⏳ Usuário ainda não existe no banco. Tentando novamente em ${delay}ms... (${attempt + 1}/${MAX_RETRIES})`);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      } else {
+        console.error("❌ Erro ao salvar push token:", error.response?.data || error.message);
+        return;
+      }
+    }
+  }
+}
+
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -73,18 +108,7 @@ export function useNotifications() {
     registerForPushNotificationsAsync().then(async (token) => {
       if (token) {
         setExpoPushToken(token);
-        try {
-          const authToken = await getToken({ template: "api-testing-token" });
-          if (authToken) {
-            await api.post(
-              "/notifications/users/push-token",
-              { pushToken: token },
-              { headers: { Authorization: `Bearer ${authToken}` } }
-            );
-          }
-        } catch (error: any) {
-          console.error("Error sending push token to server:", error.response?.data || error.message);
-        }
+        sendPushTokenWithRetry(token, getToken);
       }
     });
 
