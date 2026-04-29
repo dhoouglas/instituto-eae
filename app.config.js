@@ -4,7 +4,7 @@ module.exports = {
     slug: "Instituto-EAE",
     scheme: "instituto-eae",
     owner: "dhoouglas",
-    version: "1.0.7",
+    version: "1.0.8",
     orientation: "portrait",
     icon: "./assets/splash-icon-light.png",
     userInterfaceStyle: "automatic",
@@ -19,7 +19,7 @@ module.exports = {
       },
     },
     ios: {
-      buildNumber: "1.0.7",
+      buildNumber: "1.0.8",
       supportsTablet: true,
       icon: {
         dark: "./assets/ios-dark.png",
@@ -41,7 +41,7 @@ module.exports = {
       versionCode: 6,
       adaptiveIcon: {
         foregroundImage: "./assets/adaptive-icon.png",
-        monochromeImage: "./assets/adaptive-icon.png",
+        monochromeImage: "./assets/notification-icon.png",
         backgroundColor: "#ffffff",
       },
       edgeToEdgeEnabled: true,
@@ -51,6 +51,7 @@ module.exports = {
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
         "ACCESS_BACKGROUND_LOCATION",
+        "POST_NOTIFICATIONS",
       ],
       config: {
         googleMaps: {
@@ -59,8 +60,8 @@ module.exports = {
       },
     },
     notification: {
-      icon: "./assets/icon.png",
-      color: "#ffffff",
+      icon: "./assets/notification-icon.png",
+      color: "#2A9D8F",
     },
     web: {
       favicon: "./assets/favicon.png",
@@ -73,7 +74,15 @@ module.exports = {
     plugins: [
       "expo-font",
       "expo-web-browser",
-      "expo-notifications",
+      [
+        "expo-notifications",
+        {
+          icon: "./assets/notification-icon.png",
+          color: "#2A9D8F",
+          androidMode: "default",
+          androidCollapsedTitle: "Instituto EAE",
+        },
+      ],
       "expo-location",
     ],
   },

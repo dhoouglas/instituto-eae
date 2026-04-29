@@ -103,12 +103,16 @@ export function useNotifications() {
   >(false);
   const notificationListener = useRef<Notifications.Subscription | null>(null);
   const responseListener = useRef<Notifications.Subscription | null>(null);
+  // Ref keeps getToken always up-to-date inside the retry closure (avoids stale closure)
+  const getTokenRef = useRef(getToken);
+  useEffect(() => { getTokenRef.current = getToken; }, [getToken]);
 
   useEffect(() => {
     registerForPushNotificationsAsync().then(async (token) => {
       if (token) {
         setExpoPushToken(token);
-        sendPushTokenWithRetry(token, getToken);
+        // Pass a stable wrapper that always calls the latest getToken
+        sendPushTokenWithRetry(token, (opts) => getTokenRef.current(opts));
       }
     });
 
