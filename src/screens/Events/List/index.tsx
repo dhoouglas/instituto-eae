@@ -10,6 +10,7 @@ import {
   Platform,
   StatusBar,
   Alert,
+  Share,
 } from "react-native";
 import { useUser, useAuth } from "@clerk/clerk-expo";
 import { FontAwesome } from "@expo/vector-icons";
@@ -60,6 +61,17 @@ const EventCard = ({
   const day = item.date.toLocaleDateString("pt-BR", { day: "2-digit" });
   const month = item.date.toLocaleDateString("pt-BR", { month: "short" }).toUpperCase();
 
+  const handleShare = async () => {
+    try {
+      await Share.share({
+        title: 'Instituto EAE - Evento',
+        message: `🌱 Confira este evento do Instituto EAE!\n\n✨ ${item.title}\n📍 ${item.location}\n📅 ${item.date.toLocaleDateString('pt-BR')} às ${item.date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}h\n\nVenha participar com a gente!`,
+      });
+    } catch (error) {
+      console.error("Erro ao compartilhar evento:", error);
+    }
+  };
+
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -106,28 +118,40 @@ const EventCard = ({
           {item.title}
         </Text>
 
-        <View className="flex-row items-center mb-2">
-          <View className="w-6 items-center">
-            <FontAwesome name="map-marker" size={16} color="#047857" />
-          </View>
-          <Text
-            className="text-sm text-gray-600 font-[Inter_500Medium] flex-1"
-            numberOfLines={1}
-          >
-            {item.location}
-          </Text>
-        </View>
+        <View className="flex-row items-end justify-between">
+          <View className="flex-1">
+            <View className="flex-row items-center mb-2">
+              <View className="w-6 items-center">
+                <FontAwesome name="map-marker" size={16} color="#047857" />
+              </View>
+              <Text
+                className="text-sm text-gray-600 font-[Inter_500Medium] flex-1"
+                numberOfLines={1}
+              >
+                {item.location}
+              </Text>
+            </View>
 
-        <View className="flex-row items-center">
-          <View className="w-6 items-center">
-            <FontAwesome name="clock-o" size={14} color="#047857" />
+            <View className="flex-row items-center">
+              <View className="w-6 items-center">
+                <FontAwesome name="clock-o" size={14} color="#047857" />
+              </View>
+              <Text className="text-sm text-gray-600 font-[Inter_500Medium]">
+                {item.date.toLocaleTimeString("pt-BR", {
+                  hour: "2-digit",
+                  minute: "2-digit"
+                })}h
+              </Text>
+            </View>
           </View>
-          <Text className="text-sm text-gray-600 font-[Inter_500Medium]">
-            {item.date.toLocaleTimeString("pt-BR", {
-              hour: "2-digit",
-              minute: "2-digit"
-            })}h
-          </Text>
+
+          <TouchableOpacity
+            onPress={handleShare}
+            className="w-10 h-10 bg-gray-50 rounded-full items-center justify-center border border-gray-100"
+            activeOpacity={0.7}
+          >
+            <FontAwesome name="share-alt" size={16} color="#4b5563" />
+          </TouchableOpacity>
         </View>
       </View>
     </TouchableOpacity>

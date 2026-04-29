@@ -187,20 +187,27 @@ export function NotificationsInbox({
                             )}
                         </View>
                     </View>
-                    <Text className="text-gray-800 font-[Inter_700Bold] text-base mb-1">{item.title}</Text>
-                    <Text className="text-gray-500 font-[Inter_400Regular] text-sm leading-relaxed">{item.message}</Text>
-                    {isActionable && (
-                        <Text className="text-green-600 text-xs font-[Inter_600SemiBold] mt-2">
-                            Toque para ver o evento →
-                        </Text>
-                    )}
+                    <View className="pr-12">
+                        <Text className="text-gray-800 font-[Inter_700Bold] text-base mb-1">{item.title}</Text>
+                        <Text className="text-gray-500 font-[Inter_400Regular] text-sm leading-relaxed">{item.message}</Text>
+                        {isActionable && (
+                            <Text className="text-green-600 text-xs font-[Inter_600SemiBold] mt-2">
+                                Toque para ver o evento →
+                            </Text>
+                        )}
+                    </View>
+
+                    <View className="absolute right-3 top-1/2 flex-row items-center opacity-50 bg-gray-50/80 px-2 py-1 rounded-md" style={{ marginTop: 8 }}>
+                        <FontAwesome name="angle-double-left" size={12} color="#9CA3AF" />
+                        <Text className="text-[10px] text-gray-400 font-[Inter_600SemiBold] ml-1 uppercase tracking-wider">deslize</Text>
+                    </View>
                     {deletingId === item.id && (
                         <View className="absolute top-0 bottom-0 left-0 right-0 bg-white/60 items-center justify-center rounded-2xl z-20">
                             <ActivityIndicator color="#EF4444" size="large" />
                         </View>
                     )}
                 </TouchableOpacity>
-            </Swipeable>
+            </Swipeable >
         );
     };
 

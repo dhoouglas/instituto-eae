@@ -21,7 +21,6 @@ import DateTimePicker, {
 } from "@react-native-community/datetimepicker";
 
 import { Button } from "@/components/Button";
-import { Input } from "@/components/Input";
 import {
   createEventSchema,
   updateEventSchema,
@@ -47,8 +46,9 @@ const InputWithLabel = ({
     </Text>
     <View className="flex-row items-center w-full bg-white border border-gray-100 shadow-sm rounded-2xl px-5 h-16">
       {icon && <FontAwesome name={icon} size={20} color="#9CA3AF" />}
-      <Input
-        className="flex-1 bg-transparent border-none p-0 ml-3 text-lg font-[Inter_600SemiBold] text-gray-800"
+      <TextInput
+        style={{ textAlignVertical: "center" }}
+        className="flex-1 bg-transparent border-none py-0 ml-3 text-lg font-[Inter_600SemiBold] text-gray-800"
         placeholderTextColor="#9CA3AF"
         {...props}
       />
