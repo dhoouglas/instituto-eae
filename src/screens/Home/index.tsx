@@ -22,6 +22,7 @@ import api from "@/lib/api";
 import { FontAwesome } from "@expo/vector-icons";
 import { Header } from "@/components/Header";
 import { Loading } from "@/components/Loading";
+import { InstituteMission } from "@/components/InstituteMission";
 import Toast from "react-native-toast-message";
 
 type Event = {
@@ -281,6 +282,9 @@ export function Home({ navigation }: AppTabScreenProps<"home">) {
             }
           />
 
+          {/* Missão do Instituto */}
+          <InstituteMission />
+
           {/* Quick Actions Row */}
           <View className="mt-6 px-2">
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}>
@@ -409,7 +413,7 @@ export function Home({ navigation }: AppTabScreenProps<"home">) {
           </View>
 
           {/* Social Media Footer */}
-          <View className="p-8 items-center mt-4">
+          <View className="p-4 items-center mt-4">
             <Text className="text-sm text-gray-500 mb-4 font-[Inter_600SemiBold] uppercase tracking-widest">
               Siga o Instituto
             </Text>
