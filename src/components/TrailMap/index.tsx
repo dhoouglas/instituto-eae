@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Platform } from "react-native
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from "react-native-maps";
 import { FontAwesome, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import * as Location from "expo-location";
 
 interface Coordinate {
   latitude: number;
@@ -45,6 +46,19 @@ export function TrailMap({
   onUndo,
 }: TrailMapProps) {
   const mapRef = useRef<MapView>(null);
+  const [hasLocationPermission, setHasLocationPermission] = React.useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        // Just check the status, don't request it here to avoid unexpected prompts
+        const { status } = await Location.getForegroundPermissionsAsync();
+        setHasLocationPermission(status === "granted");
+      } catch (e) {
+        console.warn("Could not check location permission in TrailMap", e);
+      }
+    })();
+  }, []);
 
   const fitMapToCoordinates = useCallback(() => {
     if (coordinates.length > 0 && mapRef.current) {
@@ -113,7 +127,7 @@ export function TrailMap({
         }}
         onMapReady={fitMapToCoordinates}
         onPress={handleMapPress}
-        showsUserLocation
+        showsUserLocation={hasLocationPermission}
         showsMyLocationButton={false}
       >
         <Polyline

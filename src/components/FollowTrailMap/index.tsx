@@ -62,6 +62,7 @@ export function FollowTrailMap({
 }: FollowTrailMapProps) {
   const [time, setTime] = useState(0);
   const [mapType, setMapType] = useState<MapType>("hybrid");
+  const [hasVisitedStart, setHasVisitedStart] = useState(false);
   const [visitedWaypoints, setVisitedWaypoints] = useState<Set<string>>(
     new Set()
   );
@@ -91,6 +92,7 @@ export function FollowTrailMap({
     setUserPath([]);
     setTime(0);
     setVisitedWaypoints(new Set());
+    setHasVisitedStart(false);
     setHasLeftStartArea(false);
     setReachedEnd(false);
     hasGoneOffTrack.current = false;
@@ -126,6 +128,16 @@ export function FollowTrailMap({
       startPoint
     );
 
+    if (distFromStart < 20 && !hasVisitedStart) {
+      setHasVisitedStart(true);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Alert.alert(
+        "Ponto de Partida!",
+        "Você está no início da trilha. Siga o percurso indicado no mapa.",
+        [{ text: "OK" }]
+      );
+    }
+
     if (distFromStart > 30 && !hasLeftStartArea) {
       setHasLeftStartArea(true);
     }
@@ -152,7 +164,7 @@ export function FollowTrailMap({
         );
       }
     }
-  }, [userLocation, coordinates, isStarted, onFinish, hasLeftStartArea]);
+  }, [userLocation, coordinates, isStarted, onFinish, hasLeftStartArea, hasVisitedStart]);
 
   useEffect(() => {
     if (isStarted && !isPaused) {
@@ -411,14 +423,7 @@ export function FollowTrailMap({
           `Você está a ${formatDistance(distToStart)} do início da trilha. Dirija-se ao ponto de partida (marcador verde) para começar.`
         );
         return;
-      } else if (distToStart <= 20) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        Alert.alert(
-          "Siga a trilha!",
-          "Você está no ponto de partida e iniciou a trilha.",
-          [{ text: "OK" }]
-        );
-      } else {
+      } else if (distToStart > 20) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         Alert.alert(
           "Trilha Iniciada",
@@ -509,8 +514,8 @@ export function FollowTrailMap({
 
         {coordinates.length > 0 && (
           <>
-            <Marker coordinate={coordinates[0]} title="Início" pinColor="green" />
-            <Marker coordinate={coordinates[coordinates.length - 1]} title="Fim" pinColor="red" />
+            <Marker coordinate={coordinates[0]} title="Início" pinColor="green" opacity={hasVisitedStart ? 0.4 : 1} />
+            <Marker coordinate={coordinates[coordinates.length - 1]} title="Fim" pinColor="red" opacity={reachedEnd ? 0.4 : 1} />
           </>
         )}
 

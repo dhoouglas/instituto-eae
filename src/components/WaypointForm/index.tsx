@@ -11,9 +11,12 @@ export const waypointSchema = z.object({
   name: z.string().min(3, "O nome deve ter pelo menos 3 caracteres."),
   description: z
     .string()
-    .min(10, "A descrição deve ter pelo menos 10 caracteres."),
+    .nullish()
+    .refine((val) => !val || val.length >= 10, {
+      message: "A descrição deve ter pelo menos 10 caracteres.",
+    }),
   image: z.any().optional(),
-  existingImageUrl: z.string().optional(),
+  existingImageUrl: z.string().nullish(),
 });
 
 export type WaypointFormData = z.infer<typeof waypointSchema>;

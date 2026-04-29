@@ -81,6 +81,13 @@ export function TrailDetails() {
   const [error, setError] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  const handleScroll = (event: any) => {
+    const contentOffsetX = event.nativeEvent.contentOffset.x;
+    const currentIndex = Math.round(contentOffsetX / width);
+    setCurrentImageIndex(currentIndex);
+  };
 
   const openImageModal = (imageUrl: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -162,6 +169,8 @@ export function TrailDetails() {
             pagingEnabled
             showsHorizontalScrollIndicator={false}
             className="w-full h-full"
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
           >
             {trail.imageUrls?.length > 0 ? (
               trail.imageUrls.map((url, index) => (
@@ -197,7 +206,29 @@ export function TrailDetails() {
             </TouchableOpacity>
           </View>
 
-          <View className="absolute bottom-6 left-6 right-6">
+          <View className="absolute bottom-10 left-6 right-6">
+            {/* CAROUSEL INDICATORS */}
+            {trail.imageUrls?.length > 1 && (
+              <View className="flex-row items-center gap-2 mb-4">
+                {trail.imageUrls.map((_, index) => (
+                  <View
+                    key={index}
+                    className="rounded-full bg-white shadow-sm"
+                    style={{
+                      height: 6,
+                      width: currentImageIndex === index ? 24 : 6,
+                      opacity: currentImageIndex === index ? 1 : 0.5,
+                      shadowColor: "#000",
+                      shadowOffset: { width: 0, height: 1 },
+                      shadowOpacity: 0.3,
+                      shadowRadius: 2,
+                      elevation: 2,
+                    }}
+                  />
+                ))}
+              </View>
+            )}
+
             <View className="bg-white/20 self-start px-3 py-1 rounded-full backdrop-blur-md mb-2 border border-white/30">
               <Text className="text-white text-xs font-bold uppercase tracking-wider">
                 {trail.type.toLowerCase()}
