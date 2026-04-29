@@ -18,7 +18,7 @@ export function Input({ isFocused = false, isPassword = false, className, ...res
   return (
     <View className={`w-full border rounded-xl flex-row items-center ${inputStateClasses} ${className || ""}`}>
       <TextInput
-        className={`flex-1 p-5 text-lg font-[Inter_400Regular] ${isPassword ? "pr-12" : ""}`}
+        className={`flex-1 p-5 text-lg text-gray-900 font-[Inter_400Regular] ${isPassword ? "pr-12" : ""}`}
         placeholderTextColor={colors.gray[400]}
         secureTextEntry={isPassword ? !showPassword : rest.secureTextEntry}
         {...rest}

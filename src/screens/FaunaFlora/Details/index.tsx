@@ -55,6 +55,8 @@ export function FaunaFloraDetailsScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
+  const [currentPage, setCurrentPage] = useState(0);
+
   const isFocused = useIsFocused();
 
   const fetchDetails = useCallback(async () => {
@@ -106,7 +108,7 @@ export function FaunaFloraDetailsScreen() {
         case "AMEACADA":
           return { color: "text-red-800", bg: "bg-red-100", icon: "warning" };
         case "EXTINTA":
-          return { color: "text-white", bg: "bg-gray-800", icon: "times-circle" };
+          return { color: "text-gray-900", bg: "bg-gray-800", icon: "times-circle" };
         default:
           return { color: "text-green-800", bg: "bg-green-100", icon: "check-circle" };
       }
@@ -118,23 +120,49 @@ export function FaunaFloraDetailsScreen() {
       <ScrollView showsVerticalScrollIndicator={false} bounces={false} className="bg-white">
         <View style={{ height: screenHeight * 0.45 }}>
           {item.imageUrls && item.imageUrls.length > 0 ? (
-            <PagerView style={{ flex: 1 }} initialPage={0}>
-              {item.imageUrls.map((url, index) => (
-                <View key={index}>
-                  <Image
-                    source={{ uri: url }}
-                    className="w-full h-full"
-                    resizeMode="cover"
-                  />
+            <View style={{ flex: 1 }}>
+              <PagerView
+                style={{ flex: 1 }}
+                initialPage={0}
+                onPageSelected={(e) => setCurrentPage(e.nativeEvent.position)}
+              >
+                {item.imageUrls.map((url, index) => (
+                  <View key={index}>
+                    <Image
+                      source={{ uri: url }}
+                      className="w-full h-full"
+                      resizeMode="cover"
+                    />
+                  </View>
+                ))}
+              </PagerView>
+              {item.imageUrls.length > 1 && (
+                <View className="absolute bottom-8 left-0 right-0 flex-row justify-center items-center gap-2.5 z-10">
+                  {item.imageUrls.map((_, index) => (
+                    <View
+                      key={index}
+                      className="rounded-full bg-white"
+                      style={{
+                        height: 8,
+                        width: currentPage === index ? 32 : 8,
+                        opacity: currentPage === index ? 1 : 0.6,
+                        shadowColor: "#000",
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.5,
+                        shadowRadius: 3,
+                        elevation: 5,
+                      }}
+                    />
+                  ))}
                 </View>
-              ))}
-            </PagerView>
+              )}
+            </View>
           ) : (
             <View className="w-full h-full bg-green-50 items-center justify-center pt-10">
               <FontAwesome name="leaf" size={60} color="#166534" opacity={0.4} />
             </View>
           )}
-          <View className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black/60 to-transparent" />
+          <View className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black/60 to-transparent" pointerEvents="none" />
         </View>
 
         <View className="bg-white -mt-8 rounded-t-[32px] pt-8 px-6 pb-20">
